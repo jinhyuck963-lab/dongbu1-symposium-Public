@@ -6,203 +6,105 @@
 <title>동부1 심포지엄 관리</title>
 <meta property="og:title" content="동부1 심포지엄 관리">
 <meta property="og:description" content="동부1사무소 심포지엄 일정 및 신청 인원 관리">
-<meta property="og:type" content="website">
 <style>
   :root {
-    --bg: #ffffff; --bg2: #f7f7f5; --bg3: #f1f0ec;
-    --text: #111111; --text2: #555555; --text3: #999999;
-    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
-    --c-blue-bg: #E6F1FB; --c-blue: #0C447C; --c-blue-mid: #185FA5;
-    --c-green-bg: #EAF3DE; --c-green: #27500A; --c-green-mid: #3B6D11;
-    --c-teal-bg: #E1F5EE; --c-teal: #085041; --c-teal-mid: #0F6E56;
-    --c-amber-bg: #FAEEDA; --c-amber: #633806; --c-amber-mid: #854F0B;
-    --c-red-bg: #FCEBEB; --c-red: #791F1F; --c-red-mid: #A32D2D;
-    --c-purple-bg: #EEEDFE; --c-purple: #26215C; --c-purple-mid: #534AB7;
-    --radius: 10px; --radius-lg: 14px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.1);
+    --bg:#fff;--bg2:#f7f7f5;--bg3:#f1f0ec;
+    --text:#111;--text2:#555;--text3:#999;
+    --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+    --blue-bg:#E6F1FB;--blue:#0C447C;--blue-mid:#185FA5;
+    --green-bg:#EAF3DE;--green:#27500A;--green-mid:#3B6D11;
+    --teal-bg:#E1F5EE;--teal:#085041;--teal-mid:#0F6E56;
+    --amber-bg:#FAEEDA;--amber:#633806;--amber-mid:#854F0B;
+    --red-bg:#FCEBEB;--red:#791F1F;--red-mid:#A32D2D;
+    --radius:10px;--radius-lg:14px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.1);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1a1a1a; --bg2: #222222; --bg3: #2a2a2a;
-      --text: #f0f0f0; --text2: #aaaaaa; --text3: #666666;
-      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
-      --c-blue-bg: #0a2540; --c-blue: #85B7EB; --c-blue-mid: #378ADD;
-      --c-green-bg: #0d2410; --c-green: #C0DD97; --c-green-mid: #639922;
-      --c-teal-bg: #042820; --c-teal: #9FE1CB; --c-teal-mid: #1D9E75;
-      --c-amber-bg: #2a1a00; --c-amber: #FAC775; --c-amber-mid: #EF9F27;
-      --c-red-bg: #2a0a0a; --c-red: #F7C1C1; --c-red-mid: #E24B4A;
-      --c-purple-bg: #1a1540; --c-purple: #CECBF6; --c-purple-mid: #7F77DD;
-      --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(255,255,255,0.08);
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
-    background: var(--bg3); color: var(--text); min-height: 100vh; }
-
-  /* ── Top bar ── */
-  .topbar {
-    position: sticky; top: 0; z-index: 50;
-    background: var(--bg); border-bottom: 0.5px solid var(--border);
-    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
-    backdrop-filter: blur(10px);
-  }
-  .topbar-left { display: flex; align-items: center; gap: 8px; }
-  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c-teal-mid); animation: pulse 2s infinite; flex-shrink: 0; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
-  .topbar-title { font-size: 15px; font-weight: 600; }
-  .topbar-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
-  .btn-icon {
-    background: transparent; border: 0.5px solid var(--border);
-    border-radius: var(--radius); padding: 7px 10px; font-size: 15px; cursor: pointer;
-  }
-  .btn-icon:active { background: var(--bg2); }
-  .btn-add {
-    background: var(--c-blue-mid); color: #fff;
-    border: none; border-radius: var(--radius); padding: 8px 14px;
-    font-size: 13px; font-weight: 500; cursor: pointer;
-    display: flex; align-items: center; gap: 5px; white-space: nowrap;
-  }
-  .btn-add:active { opacity: 0.85; transform: scale(0.97); }
-
-  /* ── Filter bar ── */
-  .filter-scroll { overflow-x: auto; background: var(--bg); border-bottom: 0.5px solid var(--border); }
-  .filter-scroll::-webkit-scrollbar { display: none; }
-  .filter-inner { display: flex; gap: 6px; padding: 8px 16px; width: max-content; }
-  .chip {
-    padding: 5px 13px; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap;
-    border: 0.5px solid var(--border2); background: transparent; color: var(--text2);
-  }
-  .chip.on { background: var(--c-blue-bg); color: var(--c-blue); border-color: transparent; font-weight: 500; }
-
-  /* ── Month group ── */
-  .month-header {
-    font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.05em;
-    padding: 16px 16px 6px; text-transform: uppercase;
-  }
-  .card-list { padding: 0 12px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-
-  /* ── Symposium card ── */
-  .sym-card {
-    background: var(--bg); border-radius: var(--radius-lg);
-    box-shadow: var(--shadow); overflow: hidden;
-  }
-  .card-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 10px; }
-  .date-box {
-    flex-shrink: 0; background: var(--c-blue-bg); color: var(--c-blue);
-    border-radius: var(--radius); padding: 7px 10px; text-align: center; min-width: 52px;
-  }
-  .date-box .mo { font-size: 10px; font-weight: 500; }
-  .date-box .dy { font-size: 20px; font-weight: 600; line-height: 1; }
-  .date-box .wd { font-size: 10px; margin-top: 1px; color: var(--c-blue-mid); }
-  .card-info { flex: 1; min-width: 0; }
-  .card-name { font-size: 14px; font-weight: 600; line-height: 1.35; margin-bottom: 6px; }
-  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
-  .tag {
-    font-size: 11px; padding: 2px 8px; border-radius: 10px;
-    background: var(--bg2); color: var(--text2);
-  }
-  .tag.blue { background: var(--c-blue-bg); color: var(--c-blue); }
-  .tag.green { background: var(--c-green-bg); color: var(--c-green); }
-  .tag.teal { background: var(--c-teal-bg); color: var(--c-teal); }
-  .tag.amber { background: var(--c-amber-bg); color: var(--c-amber); }
-  .tag.red { background: var(--c-red-bg); color: var(--c-red); }
-  .tag.purple { background: var(--c-purple-bg); color: var(--c-purple); }
-
-  /* ── Attendees section ── */
-  .attendee-section { padding: 0 14px 12px; }
-  .att-divider { height: 0.5px; background: var(--border); margin-bottom: 10px; }
-  .att-label { font-size: 11px; color: var(--text3); margin-bottom: 7px; }
-  .att-pills { display: flex; flex-wrap: wrap; gap: 5px; }
-  .att-pill {
-    display: flex; align-items: center; gap: 4px;
-    background: var(--c-green-bg); border-radius: 20px; padding: 4px 10px 4px 8px;
-    font-size: 12px; color: var(--c-green);
-  }
-  .att-pill .pname { font-weight: 600; }
-  .att-pill .clinic { color: var(--c-green-mid); }
-  .att-pill .del-btn {
-    background: none; border: none; cursor: pointer; color: var(--c-green-mid);
-    font-size: 15px; line-height: 1; padding: 0; margin-left: 2px; display: flex; align-items: center;
-  }
-  .att-pill .del-btn:hover { color: var(--c-red-mid); }
-  .add-att-btn {
-    display: flex; align-items: center; gap: 4px;
-    background: transparent; border: 0.5px dashed var(--border2);
-    border-radius: 20px; padding: 4px 10px; font-size: 12px;
-    color: var(--text3); cursor: pointer;
-  }
-  .add-att-btn:active { background: var(--bg2); }
-  .del-card-btn {
-    flex-shrink: 0; background: none; border: none; cursor: pointer;
-    color: var(--text3); padding: 4px; border-radius: 6px;
-  }
-  .del-card-btn:hover { background: var(--c-red-bg); color: var(--c-red-mid); }
-
-  /* ── Empty state ── */
-  .empty { text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px; }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-
-  /* ── Bottom space ── */
-  .bottom-pad { height: 80px; }
-
-  /* ── Modal ── */
-  .overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5); z-index: 200;
-    align-items: flex-end; justify-content: center;
-  }
-  .overlay.open { display: flex; }
-  @media (min-width: 520px) { .overlay { align-items: center; } }
-  .sheet {
-    background: var(--bg); width: 100%; max-width: 480px;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 20px 20px 32px;
-    animation: slideUp 0.22s ease;
-  }
-  @media (min-width: 520px) { .sheet { border-radius: var(--radius-lg); padding: 24px; } }
-  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
-  .sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 16px; }
-  @media (min-width: 520px) { .sheet-handle { display: none; } }
-  .sheet-title { font-size: 16px; font-weight: 600; margin-bottom: 18px; }
-  .frow { margin-bottom: 14px; }
-  .flabel { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
-  .finput {
-    width: 100%; padding: 10px 12px; font-size: 14px;
-    border: 0.5px solid var(--border2); border-radius: var(--radius);
-    background: var(--bg2); color: var(--text); outline: none;
-  }
-  .finput:focus { border-color: var(--c-blue-mid); background: var(--bg); }
-  .f2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sheet-actions { display: flex; gap: 8px; margin-top: 20px; }
-  .btn-cancel {
-    flex: 1; padding: 11px; border: 0.5px solid var(--border2);
-    border-radius: var(--radius); background: transparent; color: var(--text2);
-    font-size: 14px; cursor: pointer;
-  }
-  .btn-save {
-    flex: 2; padding: 11px; border: none; border-radius: var(--radius);
-    background: var(--c-blue-mid); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
-  }
-  .btn-save:active { opacity: 0.85; }
-
-  /* ── Toast ── */
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: #111; color: #fff; padding: 10px 18px; border-radius: 20px;
-    font-size: 13px; z-index: 999; opacity: 0; transition: all 0.25s;
-    white-space: nowrap;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-  /* ── FAB ── */
-  .fab {
-    position: fixed; bottom: 24px; right: 20px;
-    width: 52px; height: 52px; border-radius: 50%;
-    background: var(--c-blue-mid); color: #fff; border: none;
-    font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(24,95,165,0.45); z-index: 100;
-  }
-  .fab:active { transform: scale(0.93); }
+  @media(prefers-color-scheme:dark){:root{
+    --bg:#1a1a1a;--bg2:#222;--bg3:#2a2a2a;
+    --text:#f0f0f0;--text2:#aaa;--text3:#666;
+    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+    --blue-bg:#0a2540;--blue:#85B7EB;--blue-mid:#378ADD;
+    --green-bg:#0d2410;--green:#C0DD97;--green-mid:#639922;
+    --teal-bg:#042820;--teal:#9FE1CB;--teal-mid:#1D9E75;
+    --amber-bg:#2a1a00;--amber:#FAC775;--amber-mid:#EF9F27;
+    --red-bg:#2a0a0a;--red:#F7C1C1;--red-mid:#E24B4A;
+    --shadow:0 1px 3px rgba(0,0,0,0.3),0 0 0 0.5px rgba(255,255,255,0.08);
+  }}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+  .topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:0.5px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(10px)}
+  .topbar-left{display:flex;align-items:center;gap:8px}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--teal-mid);animation:pulse 2s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+  .topbar-title{font-size:15px;font-weight:600}
+  .topbar-sub{font-size:11px;color:var(--text3);margin-top:1px}
+  .topbar-right{display:flex;gap:8px;align-items:center}
+  .btn-add{background:var(--blue-mid);color:#fff;border:none;border-radius:var(--radius);padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+  .btn-add:active{opacity:.85}
+  .btn-icon{background:transparent;border:0.5px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:15px;cursor:pointer}
+  .filter-scroll{overflow-x:auto;background:var(--bg);border-bottom:0.5px solid var(--border)}
+  .filter-scroll::-webkit-scrollbar{display:none}
+  .filter-inner{display:flex;gap:6px;padding:8px 16px;width:max-content}
+  .chip{padding:5px 13px;border-radius:20px;font-size:12px;cursor:pointer;white-space:nowrap;border:0.5px solid var(--border2);background:transparent;color:var(--text2)}
+  .chip.on{background:var(--blue-bg);color:var(--blue);border-color:transparent;font-weight:500}
+  .month-header{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.05em;padding:16px 16px 6px;text-transform:uppercase}
+  .card-list{padding:0 12px;display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+  .sym-card{background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+  .card-head{display:flex;align-items:flex-start;gap:12px;padding:14px 14px 10px}
+  .date-box{flex-shrink:0;background:var(--blue-bg);color:var(--blue);border-radius:var(--radius);padding:7px 10px;text-align:center;min-width:52px}
+  .date-box .mo{font-size:10px;font-weight:500}
+  .date-box .dy{font-size:20px;font-weight:600;line-height:1}
+  .date-box .wd{font-size:10px;margin-top:1px;color:var(--blue-mid)}
+  .card-info{flex:1;min-width:0}
+  .card-name{font-size:14px;font-weight:600;line-height:1.35;margin-bottom:6px}
+  .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg2);color:var(--text2)}
+  .tag.blue{background:var(--blue-bg);color:var(--blue)}
+  .tag.green{background:var(--green-bg);color:var(--green)}
+  .tag.teal{background:var(--teal-bg);color:var(--teal)}
+  .tag.amber{background:var(--amber-bg);color:var(--amber)}
+  .tag.red{background:var(--red-bg);color:var(--red)}
+  .attendee-section{padding:0 14px 12px}
+  .att-divider{height:0.5px;background:var(--border);margin-bottom:10px}
+  .att-label{font-size:11px;color:var(--text3);margin-bottom:7px}
+  .att-pills{display:flex;flex-wrap:wrap;gap:5px}
+  .att-pill{display:flex;align-items:center;gap:4px;background:var(--green-bg);border-radius:20px;padding:4px 10px 4px 8px;font-size:12px;color:var(--green)}
+  .att-pill .pname{font-weight:600}
+  .att-pill .clinic{color:var(--green-mid)}
+  .att-pill .del-btn{background:none;border:none;cursor:pointer;color:var(--green-mid);font-size:15px;line-height:1;padding:0;margin-left:2px}
+  .att-pill .del-btn:hover{color:var(--red-mid)}
+  .add-att-btn{display:flex;align-items:center;gap:4px;background:transparent;border:0.5px dashed var(--border2);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--text3);cursor:pointer}
+  .del-card-btn{flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;border-radius:6px}
+  .del-card-btn:hover{background:var(--red-bg);color:var(--red-mid)}
+  .empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:14px}
+  .bottom-pad{height:80px}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+  .overlay.open{display:flex}
+  @media(min-width:520px){.overlay{align-items:center}}
+  .sheet{background:var(--bg);width:100%;max-width:480px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:20px 20px 32px;animation:slideUp .22s ease}
+  @media(min-width:520px){.sheet{border-radius:var(--radius-lg);padding:24px}}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px}
+  @media(min-width:520px){.sheet-handle{display:none}}
+  .sheet-title{font-size:16px;font-weight:600;margin-bottom:18px}
+  .frow{margin-bottom:14px}
+  .flabel{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;font-weight:500}
+  .finput{width:100%;padding:10px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);outline:none}
+  .finput:focus{border-color:var(--blue-mid);background:var(--bg)}
+  .f2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sheet-actions{display:flex;gap:8px;margin-top:20px}
+  .btn-cancel{flex:1;padding:11px;border:0.5px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:14px;cursor:pointer}
+  .btn-save{flex:2;padding:11px;border:none;border-radius:var(--radius);background:var(--blue-mid);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-save:disabled{opacity:.5;cursor:not-allowed}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:all .25s;white-space:nowrap}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  .fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--blue-mid);color:#fff;border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(24,95,165,.45);z-index:100}
+  .fab:active{transform:scale(.93)}
+  .saving-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:500;align-items:center;justify-content:center}
+  .saving-overlay.show{display:flex}
+  .saving-box{background:var(--bg);border-radius:var(--radius-lg);padding:20px 28px;font-size:14px;color:var(--text);display:flex;align-items:center;gap:12px}
+  .spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--blue-mid);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -215,58 +117,28 @@
       <div class="topbar-sub" id="sync-label">불러오는 중...</div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button class="btn-icon" onclick="showSetup()" title="설정" aria-label="설정">⚙️</button>
+  <div class="topbar-right">
+    <button class="btn-icon" onclick="loadData()" title="새로고침">🔄</button>
     <button class="btn-add" onclick="openAddSymp()">＋ 등록</button>
-  </div>
-</div>
-
-<!-- 설정 화면 -->
-<div id="setup-screen" style="display:none;position:fixed;inset:0;z-index:300;background:var(--bg3);align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:28px 24px;width:100%;max-width:420px;box-shadow:var(--shadow)">
-    <div style="font-size:17px;font-weight:700;margin-bottom:6px">⚙️ JSONBin 연결 설정</div>
-    <div style="font-size:13px;color:var(--text3);margin-bottom:20px;line-height:1.6">
-      <a href="https://jsonbin.io" target="_blank" style="color:var(--c-blue-mid)">jsonbin.io</a>에서 무료 가입 후<br>
-      API Key를 발급받아 아래에 입력하세요.
-    </div>
-    <div class="frow">
-      <label class="flabel">① X-Master-Key (API Key)</label>
-      <input type="password" id="cfg-key" class="finput" placeholder="$2a$10$...">
-    </div>
-    <div class="frow">
-      <label class="flabel">② Bin ID</label>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="cfg-bin" class="finput" placeholder="64자리 ID (아래 버튼으로 자동 생성 가능)" style="flex:1">
-      </div>
-    </div>
-    <button onclick="createNewBin()" style="width:100%;padding:9px;margin-bottom:12px;border:0.5px dashed var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:13px;cursor:pointer">
-      🪣 새 Bin 자동 생성 (API Key 입력 후 클릭)
-    </button>
-    <div id="setup-msg" style="font-size:12px;color:var(--text3);min-height:18px;margin-bottom:14px;word-break:break-all"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-cancel" onclick="hideSetup()" style="flex:1;padding:11px;border:0.5px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:14px;cursor:pointer">닫기</button>
-      <button class="btn-save" onclick="applySettings()" style="flex:2;padding:11px;border:none;border-radius:var(--radius);background:var(--c-blue-mid);color:#fff;font-size:14px;font-weight:600;cursor:pointer">저장 및 연결</button>
-    </div>
   </div>
 </div>
 
 <div class="filter-scroll">
   <div class="filter-inner">
-    <button class="chip on" data-f="all" onclick="setFilter('all',this)">전체</button>
-    <button class="chip" data-f="5" onclick="setFilter('5',this)">5월</button>
-    <button class="chip" data-f="6" onclick="setFilter('6',this)">6월</button>
-    <button class="chip" data-f="7p" onclick="setFilter('7p',this)">7월+</button>
-    <button class="chip" data-f="open" onclick="setFilter('open',this)">신청 가능</button>
-    <button class="chip" data-f="applied" onclick="setFilter('applied',this)">신청 완료</button>
+    <button class="chip on" onclick="setFilter('all',this)">전체</button>
+    <button class="chip" onclick="setFilter('5',this)">5월</button>
+    <button class="chip" onclick="setFilter('6',this)">6월</button>
+    <button class="chip" onclick="setFilter('7p',this)">7월+</button>
+    <button class="chip" onclick="setFilter('open',this)">신청 가능</button>
+    <button class="chip" onclick="setFilter('applied',this)">신청 완료</button>
   </div>
 </div>
 
 <div id="main-list"></div>
 <div class="bottom-pad"></div>
+<button class="fab" onclick="openAddSymp()">＋</button>
 
-<button class="fab" onclick="openAddSymp()" aria-label="심포지엄 등록">＋</button>
-
-<!-- 심포지엄 등록 시트 -->
+<!-- 심포지엄 등록 -->
 <div class="overlay" id="ov-symp" onclick="bgClose(event,'ov-symp')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -297,12 +169,12 @@
     </div>
     <div class="sheet-actions">
       <button class="btn-cancel" onclick="closeOv('ov-symp')">취소</button>
-      <button class="btn-save" onclick="saveSymp()">저장</button>
+      <button class="btn-save" id="btn-save-symp" onclick="saveSymp()">저장</button>
     </div>
   </div>
 </div>
 
-<!-- 인원 등록 시트 -->
+<!-- 인원 등록 -->
 <div class="overlay" id="ov-person" onclick="bgClose(event,'ov-person')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -320,45 +192,40 @@
       <input type="text" id="fp-doctor" class="finput" placeholder="예: 이치훈 (선택)"></div>
     <div class="sheet-actions">
       <button class="btn-cancel" onclick="closeOv('ov-person')">취소</button>
-      <button class="btn-save" onclick="savePerson()">등록</button>
+      <button class="btn-save" id="btn-save-person" onclick="savePerson()">등록</button>
     </div>
   </div>
+</div>
+
+<!-- 저장 중 오버레이 -->
+<div class="saving-overlay" id="saving-overlay">
+  <div class="saving-box"><div class="spinner"></div>저장 중...</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ── JSONBin 설정 ── */
-const SETTINGS_KEY = 'dongbu1_jsonbin_settings';
-let BIN_ID = '';
-let API_KEY = '';
-
-function loadSettings() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-    BIN_ID = s.binId || '';
-    API_KEY = s.apiKey || '';
-  } catch(e) {}
-}
-function saveSettings(binId, apiKey) {
-  BIN_ID = binId; API_KEY = apiKey;
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ binId, apiKey }));
-}
-function isConfigured() { return BIN_ID && API_KEY; }
-
-let data = [];
-let filter = 'all';
+// ── GitHub 설정 (하드코딩) ──
+const GH_OWNER = 'jinhyuck963-lab';
+const GH_REPO  = 'dongbu1-symposium-Public';
+const GH_FILE  = 'data.json';
+const GH_TOKEN = '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';
+const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
 
 const MO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD = ['일','월','화','수','목','금','토'];
-const ST = { open:{l:'신청 가능',c:'green'}, comp:{l:'경쟁 모객',c:'amber'}, closed:{l:'마감',c:'red'}, tbd:{l:'공지 예정',c:'blue'} };
-
+const ST = {
+  open:  {l:'신청 가능', c:'green'},
+  comp:  {l:'경쟁 모객', c:'amber'},
+  closed:{l:'마감',      c:'red'},
+  tbd:   {l:'공지 예정', c:'blue'},
+};
 const SEED = [
   {id:'s1',name:'DEEP Symposium — 소피텔 앰배서더 서울',ds:'2026-05-19',de:'2026-05-19',product:'나보타, 브이올렛',pm:'이현진 PM',to:'나보타·브이올렛 매출처 O',status:'open',att:[{p:'이상원',c:'섬세이의원',d:'홍석우'}]},
   {id:'s2',name:'롯데호텔 소공동 — 피콕스위트',ds:'2026-05-16',de:'2026-05-17',product:'세비카F, 웰체크, 카트BP',pm:'김정욱 PM',to:'사업부 18명',status:'open',att:[{p:'김은종',c:'세실내과 *연자',d:'이치훈'},{p:'김은종',c:'성심의원',d:'전병수'},{p:'이상원',c:'연세숲내과',d:'김채원'},{p:'허종환',c:'바른마음내과',d:'김주경'}]},
   {id:'s3',name:'롯데호텔 소공동 — 가넷스위트',ds:'2026-05-16',de:'2026-05-17',product:'모비케어, 릭시아나',pm:'심연주 PM',to:'사업부 7명',status:'open',att:[{p:'김은주',c:'둔촌봄날이비인후과',d:'배승희'}]},
   {id:'s4',name:'DMD 심포지엄',ds:'2026-05-16',de:'2026-05-17',product:'펙수클루',pm:'이민호 PM',to:'30명',status:'open',att:[]},
-  {id:'s5',name:'제주 엠버퓨어힐',ds:'2026-05-23',de:'2026-05-24',product:'골다공증 / 우울증 / 위장관질환',pm:'김경수 PM',to:'사무소 TO X (여유 O)',status:'comp',att:[]},
+  {id:'s5',name:'제주 엠버퓨어힐',ds:'2026-05-23',de:'2026-05-24',product:'골다공증/우울증/위장관질환',pm:'김경수 PM',to:'사무소 TO X (여유 O)',status:'comp',att:[]},
   {id:'s6',name:'경주 라한호텔',ds:'2026-05-30',de:'2026-05-31',product:'젤렌카, 젤토파, 스토보클로, 펙수클루',pm:'윤형주 PM',to:'류마티스내과 전문의 50명',status:'open',att:[]},
   {id:'s7',name:'DMD 심포지엄 (5월)',ds:'2026-05-30',de:'2026-05-31',product:'바로에젯, 크레젯',pm:'양진모 PM',to:'미정',status:'open',att:[]},
   {id:'s8',name:'풀만 서울 이스트폴',ds:'2026-06-20',de:'2026-06-21',product:'우루사, 실리스칸',pm:'김민수 PM',to:'1명',status:'open',att:[{p:'최진혁',c:'365플러스내과',d:'유정선'}]},
@@ -366,145 +233,104 @@ const SEED = [
   {id:'s10',name:'르메르디앙 서울 명동',ds:'2026-06-27',de:'2026-06-28',product:'릭시아나',pm:'우찬하 PM',to:'1명',status:'open',att:[{p:'이상원',c:'365서울연합의원',d:''}]},
 ];
 
-/* ── Setup screen ── */
-function showSetup(msg) {
-  document.getElementById('main-list').innerHTML = '';
-  document.getElementById('setup-screen').style.display = 'flex';
-  if (msg) document.getElementById('setup-msg').textContent = msg;
-  const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-  if (s.binId) document.getElementById('cfg-bin').value = s.binId;
-  if (s.apiKey) document.getElementById('cfg-key').value = s.apiKey;
-}
-function hideSetup() { document.getElementById('setup-screen').style.display = 'none'; }
+let data = [];
+let fileSha = '';
+let filter  = 'all';
 
-async function createNewBin() {
-  const apiKey = document.getElementById('cfg-key').value.trim();
-  if (!apiKey) { document.getElementById('setup-msg').textContent = 'API Key를 먼저 입력해주세요.'; return; }
-  document.getElementById('setup-msg').textContent = '새 Bin 생성 중...';
-  try {
-    const r = await fetch('https://api.jsonbin.io/v3/b', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey, 'X-Bin-Name': '동부1-심포지엄' },
-      body: JSON.stringify(SEED)
-    });
-    if (!r.ok) throw new Error('API Key 오류: ' + r.status);
-    const j = await r.json();
-    const newBinId = j.metadata.id;
-    document.getElementById('cfg-bin').value = newBinId;
-    document.getElementById('setup-msg').textContent = `✅ 생성 완료! Bin ID: ${newBinId}`;
-    data = SEED;
-  } catch(e) {
-    document.getElementById('setup-msg').textContent = '❌ ' + e.message;
-  }
-}
-
-async function applySettings() {
-  const binId = document.getElementById('cfg-bin').value.trim();
-  const apiKey = document.getElementById('cfg-key').value.trim();
-  if (!binId || !apiKey) { document.getElementById('setup-msg').textContent = 'Bin ID와 API Key 모두 입력해주세요.'; return; }
-  saveSettings(binId, apiKey);
-  hideSetup();
-  await load();
-}
-
-/* ── Data sync ── */
-async function load() {
-  if (!isConfigured()) { showSetup(); return; }
+// ── GitHub 불러오기 ──
+async function loadData() {
   setSyncLabel('동기화 중...');
   try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': API_KEY }
+    const r = await fetch(GH_API, {
+      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }
     });
-    if (r.status === 401) { showSetup('API Key가 유효하지 않습니다. 다시 확인해주세요.'); return; }
-    if (r.status === 404) { showSetup('Bin ID를 찾을 수 없습니다. 다시 확인해주세요.'); return; }
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const j = await r.json();
-    data = Array.isArray(j.record) ? j.record : SEED;
+    if (r.status === 404) {
+      // 파일 없으면 초기 데이터로 생성
+      data = SEED;
+      await pushToGitHub(data, '');
+    } else if (r.ok) {
+      const j = await r.json();
+      fileSha = j.sha;
+      const decoded = JSON.parse(atob(j.content.replace(/\n/g,'')));
+      data = Array.isArray(decoded) ? decoded : SEED;
+    } else {
+      throw new Error('HTTP ' + r.status);
+    }
   } catch(e) {
     if (data.length === 0) data = SEED;
+    setSyncLabel('오프라인 — 로컬 데이터');
+    render(); return;
   }
   setSyncLabel(timeStr() + ' 기준');
   render();
 }
 
-async function save() {
-  if (!isConfigured()) return;
+// ── GitHub 저장 ──
+async function pushToGitHub(newData, sha) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2))));
+  const body = { message: '데이터 업데이트', content };
+  if (sha) body.sha = sha;
+  const r = await fetch(GH_API, {
+    method: 'PUT',
+    headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error('저장 실패 ' + r.status);
+  const j = await r.json();
+  fileSha = j.content.sha;
+}
+
+async function saveData() {
+  showSaving(true);
   try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-      body: JSON.stringify(data)
-    });
-    if (!r.ok) throw new Error();
+    await pushToGitHub(data, fileSha);
     setSyncLabel(timeStr() + ' 저장됨');
+    toast('저장됐습니다 ✓');
   } catch(e) {
-    setSyncLabel('저장 실패');
+    toast('저장 실패 — 잠시 후 다시 시도해주세요');
+  } finally {
+    showSaving(false);
   }
 }
 
-function timeStr() {
-  const n = new Date();
-  return n.getHours() + ':' + String(n.getMinutes()).padStart(2,'0');
-}
-function setSyncLabel(t) { document.getElementById('sync-label').textContent = t; }
-
-function setFilter(f, el) {
-  filter = f;
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  render();
-}
-
+// ── 렌더 ──
 function render() {
   let items = [...data].sort((a,b) => a.ds.localeCompare(b.ds));
-  if (filter === '5') items = items.filter(s => s.ds.startsWith('2026-05'));
-  else if (filter === '6') items = items.filter(s => s.ds.startsWith('2026-06'));
-  else if (filter === '7p') items = items.filter(s => s.ds >= '2026-07');
-  else if (filter === 'open') items = items.filter(s => s.status !== 'closed');
-  else if (filter === 'applied') items = items.filter(s => s.att && s.att.length > 0);
+  if (filter==='5')       items = items.filter(s=>s.ds.startsWith('2026-05'));
+  else if(filter==='6')   items = items.filter(s=>s.ds.startsWith('2026-06'));
+  else if(filter==='7p')  items = items.filter(s=>s.ds>='2026-07');
+  else if(filter==='open')    items = items.filter(s=>s.status!=='closed');
+  else if(filter==='applied') items = items.filter(s=>s.att&&s.att.length>0);
 
   const el = document.getElementById('main-list');
-  if (!items.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>해당하는 심포지엄이 없습니다.</div>';
-    return;
-  }
+  if (!items.length) { el.innerHTML='<div class="empty">📭 해당하는 심포지엄이 없습니다.</div>'; return; }
 
   const groups = {};
-  items.forEach(s => {
-    const mo = s.ds.substring(0,7);
-    if (!groups[mo]) groups[mo] = [];
-    groups[mo].push(s);
-  });
+  items.forEach(s=>{ const mo=s.ds.substring(0,7); if(!groups[mo])groups[mo]=[]; groups[mo].push(s); });
 
-  let html = '';
-  for (const mo of Object.keys(groups).sort()) {
-    const [y, m] = mo.split('-');
-    html += `<div class="month-header">${y}년 ${parseInt(m)}월</div><div class="card-list">`;
-    groups[mo].forEach(s => { html += renderCard(s); });
-    html += '</div>';
+  let html='';
+  for(const mo of Object.keys(groups).sort()){
+    const [y,m]=mo.split('-');
+    html+=`<div class="month-header">${y}년 ${parseInt(m)}월</div><div class="card-list">`;
+    groups[mo].forEach(s=>{ html+=renderCard(s); });
+    html+='</div>';
   }
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
-function renderCard(s) {
-  const ds = new Date(s.ds + 'T00:00:00');
-  const de = new Date(s.de + 'T00:00:00');
-  const same = s.ds === s.de;
-  const dateStr = same
-    ? `${ds.getMonth()+1}/${ds.getDate()}(${WD[ds.getDay()]})`
-    : `${ds.getMonth()+1}/${ds.getDate()}–${de.getDate()}(${WD[ds.getDay()]}·${WD[de.getDay()]})`;
-
-  const st = ST[s.status] || ST.open;
-  const attCount = (s.att||[]).length;
-
-  const pills = (s.att||[]).map((a,i) => `
+function renderCard(s){
+  const ds=new Date(s.ds+'T00:00:00'), de=new Date(s.de+'T00:00:00');
+  const same=s.ds===s.de;
+  const dateStr=same?`${ds.getMonth()+1}/${ds.getDate()}(${WD[ds.getDay()]})`:`${ds.getMonth()+1}/${ds.getDate()}–${de.getDate()}(${WD[ds.getDay()]}·${WD[de.getDay()]})`;
+  const st=ST[s.status]||ST.open;
+  const attCount=(s.att||[]).length;
+  const pills=(s.att||[]).map((a,i)=>`
     <div class="att-pill">
       <span class="pname">${a.p}</span>
-      <span style="opacity:0.5;margin:0 1px">→</span>
+      <span style="opacity:.5;margin:0 1px">→</span>
       <span class="clinic">${a.c}${a.d?' ('+a.d+')':''}</span>
       <button class="del-btn" onclick="removeAtt('${s.id}',${i})">×</button>
     </div>`).join('');
-
   return `
   <div class="sym-card" id="card-${s.id}">
     <div class="card-head">
@@ -517,17 +343,17 @@ function renderCard(s) {
         <div class="card-name">${s.name}</div>
         <div class="tags">
           <span class="tag">${dateStr}</span>
-          ${s.product ? `<span class="tag blue">${s.product}</span>` : ''}
-          ${s.pm ? `<span class="tag">${s.pm}</span>` : ''}
-          ${s.to ? `<span class="tag teal">TO: ${s.to}</span>` : ''}
+          ${s.product?`<span class="tag blue">${s.product}</span>`:''}
+          ${s.pm?`<span class="tag">${s.pm}</span>`:''}
+          ${s.to?`<span class="tag teal">TO: ${s.to}</span>`:''}
           <span class="tag ${st.c}">${st.l}</span>
-          ${attCount > 0 ? `<span class="tag green">${attCount}명 신청</span>` : ''}
+          ${attCount>0?`<span class="tag green">${attCount}명 신청</span>`:''}
         </div>
       </div>
-      <button class="del-card-btn" onclick="delSymp('${s.id}')" aria-label="삭제">🗑</button>
+      <button class="del-card-btn" onclick="delSymp('${s.id}')">🗑</button>
     </div>
     <div class="attendee-section">
-      ${attCount > 0 ? '<div class="att-divider"></div><div class="att-label">신청 인원</div>' : ''}
+      ${attCount>0?'<div class="att-divider"></div><div class="att-label">신청 인원</div>':''}
       <div class="att-pills">
         ${pills}
         <button class="add-att-btn" onclick="openAddAtt('${s.id}')">＋ 인원 추가</button>
@@ -536,88 +362,89 @@ function renderCard(s) {
   </div>`;
 }
 
-function openAddSymp() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('fs-start').value = today;
-  document.getElementById('fs-end').value = today;
-  ['fs-name','fs-product','fs-to','fs-pm'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('fs-status').value = 'open';
+// ── 필터 ──
+function setFilter(f,el){
+  filter=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+// ── 심포지엄 등록 ──
+function openAddSymp(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('fs-start').value=today;
+  document.getElementById('fs-end').value=today;
+  ['fs-name','fs-product','fs-to','fs-pm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fs-status').value='open';
   document.getElementById('ov-symp').classList.add('open');
 }
-
-async function saveSymp() {
-  const name = document.getElementById('fs-name').value.trim();
-  const ds = document.getElementById('fs-start').value;
-  if (!name || !ds) { toast('날짜와 심포지엄명은 필수입니다'); return; }
+async function saveSymp(){
+  const name=document.getElementById('fs-name').value.trim();
+  const ds=document.getElementById('fs-start').value;
+  if(!name||!ds){toast('날짜와 심포지엄명은 필수입니다');return;}
+  setBtnLoading('btn-save-symp',true);
   data.push({
-    id: 'u' + Date.now(),
-    name,
-    ds,
-    de: document.getElementById('fs-end').value || ds,
-    product: document.getElementById('fs-product').value.trim(),
-    pm: document.getElementById('fs-pm').value.trim(),
-    to: document.getElementById('fs-to').value.trim(),
-    status: document.getElementById('fs-status').value,
-    att: []
+    id:'u'+Date.now(), name, ds,
+    de:document.getElementById('fs-end').value||ds,
+    product:document.getElementById('fs-product').value.trim(),
+    pm:document.getElementById('fs-pm').value.trim(),
+    to:document.getElementById('fs-to').value.trim(),
+    status:document.getElementById('fs-status').value,
+    att:[]
   });
+  await saveData();
+  setBtnLoading('btn-save-symp',false);
   closeOv('ov-symp');
-  await save();
   render();
-  toast('심포지엄이 등록됐습니다');
 }
 
-function openAddAtt(sid) {
-  document.getElementById('fp-sid').value = sid;
-  document.getElementById('fp-clinic').value = '';
-  document.getElementById('fp-doctor').value = '';
+// ── 인원 등록 ──
+function openAddAtt(sid){
+  document.getElementById('fp-sid').value=sid;
+  document.getElementById('fp-clinic').value='';
+  document.getElementById('fp-doctor').value='';
   document.getElementById('ov-person').classList.add('open');
 }
-
-async function savePerson() {
-  const sid = document.getElementById('fp-sid').value;
-  const clinic = document.getElementById('fp-clinic').value.trim();
-  if (!clinic) { toast('거래처명을 입력해주세요'); return; }
-  const s = data.find(x => x.id === sid);
-  if (!s) return;
-  s.att = s.att || [];
-  s.att.push({ p: document.getElementById('fp-person').value, c: clinic, d: document.getElementById('fp-doctor').value.trim() });
+async function savePerson(){
+  const sid=document.getElementById('fp-sid').value;
+  const clinic=document.getElementById('fp-clinic').value.trim();
+  if(!clinic){toast('거래처명을 입력해주세요');return;}
+  const s=data.find(x=>x.id===sid);
+  if(!s)return;
+  s.att=s.att||[];
+  s.att.push({p:document.getElementById('fp-person').value,c:clinic,d:document.getElementById('fp-doctor').value.trim()});
+  setBtnLoading('btn-save-person',true);
+  await saveData();
+  setBtnLoading('btn-save-person',false);
   closeOv('ov-person');
-  await save();
-  render();
-  toast('인원이 등록됐습니다');
-}
-
-async function removeAtt(sid, idx) {
-  const s = data.find(x => x.id === sid);
-  if (!s) return;
-  s.att.splice(idx, 1);
-  await save();
   render();
 }
 
-async function delSymp(sid) {
-  if (!confirm('이 심포지엄을 삭제할까요?')) return;
-  data = data.filter(x => x.id !== sid);
-  await save();
-  render();
-  toast('삭제됐습니다');
+// ── 삭제 ──
+async function removeAtt(sid,idx){
+  const s=data.find(x=>x.id===sid); if(!s)return;
+  s.att.splice(idx,1);
+  await saveData(); render();
+}
+async function delSymp(sid){
+  if(!confirm('이 심포지엄을 삭제할까요?'))return;
+  data=data.filter(x=>x.id!==sid);
+  await saveData(); render();
 }
 
-function closeOv(id) { document.getElementById(id).classList.remove('open'); }
-function bgClose(e, id) { if (e.target.classList.contains('overlay')) closeOv(id); }
-
+// ── 유틸 ──
+function closeOv(id){document.getElementById(id).classList.remove('open')}
+function bgClose(e,id){if(e.target.classList.contains('overlay'))closeOv(id)}
+function setSyncLabel(t){document.getElementById('sync-label').textContent=t}
+function timeStr(){const n=new Date();return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')}
+function showSaving(v){document.getElementById('saving-overlay').classList[v?'add':'remove']('show')}
+function setBtnLoading(id,v){const b=document.getElementById(id);b.disabled=v;b.textContent=v?'저장 중...':(id.includes('symp')?'저장':'등록')}
 let toastTimer;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
-}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500)}
 
-loadSettings();
-load();
-setInterval(load, 20000);
+loadData();
+setInterval(loadData, 30000);
 </script>
 </body>
 </html>
