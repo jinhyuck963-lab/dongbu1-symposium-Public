@@ -265,7 +265,7 @@ async function loadData(){
     } else if(r.ok){
       const j=await r.json();
       fileSha=j.sha;
-      data=JSON.parse(atob(j.content.replace(/\n/g,'')));
+      data=JSON.parse(fromBase64(j.content));
     } else throw new Error();
   }catch(e){
     if(data.length===0)data=SEED;
@@ -276,9 +276,22 @@ async function loadData(){
   render();
 }
 
+function toBase64(str){
+  const bytes=new TextEncoder().encode(str);
+  let bin='';
+  bytes.forEach(b=>bin+=String.fromCharCode(b));
+  return btoa(bin);
+}
+function fromBase64(b64){
+  const bin=atob(b64.replace(/\n/g,''));
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
 async function pushData(newData, sha){
   const token=getToken();
-  const content=btoa(unescape(encodeURIComponent(JSON.stringify(newData,null,2))));
+  const content=toBase64(JSON.stringify(newData,null,2));
   const body={message:'데이터 업데이트',content};
   if(sha)body.sha=sha;
   const r=await fetch(GH_API,{
