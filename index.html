@@ -153,27 +153,21 @@
       <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✏️ 직접 입력</button>
     </div>
 
-    <!-- PDF 업로드 영역 -->
+
+    <!-- 텍스트 붙여넣기 영역 -->
     <div id="pane-mail">
       <div style="background:var(--blue-bg);border-radius:var(--radius);padding:10px 12px;margin:12px 0 12px;font-size:12px;color:var(--blue);line-height:1.7">
         <b>사용 방법</b><br>
-        1. 메일 페이지에서 GoFullPage로 PDF 저장<br>
-        2. 아래에 PDF 파일 드래그 또는 클릭하여 업로드<br>
-        3. AI 자동 분석 → 확인 후 저장
+        1. 심포지엄 메일 페이지에서 Ctrl+A → Ctrl+C<br>
+        2. 아래 칸에 Ctrl+V로 붙여넣기<br>
+        3. AI 자동 분석 버튼 클릭
       </div>
-
-      <!-- 드래그 업로드 존 -->
-      <div id="drop-zone"
-        style="border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:12px;transition:all .2s"
-        onclick="document.getElementById('pdf-input').click()"
-        ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div style="font-size:13px;font-weight:500;color:var(--text2)" id="drop-label">파일을 여기에 드래그하거나 클릭하세요</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">PDF 또는 PNG (GoFullPage로 저장한 메일 파일)</div>
+      <div class="frow">
+        <label class="flabel">메일 내용 전체 붙여넣기</label>
+        <textarea id="mail-paste" class="finput" rows="8" placeholder="메일 내용을 여기에 붙여넣으세요 (Ctrl+A → Ctrl+V)"></textarea>
       </div>
-      <input type="file" id="pdf-input" accept="application/pdf,image/png,image/jpeg" style="display:none" onchange="onFileSelect(event)">
-
       <div id="parse-msg" style="font-size:12px;min-height:16px;margin-bottom:10px;color:var(--teal-mid)"></div>
+      <button class="btn-save" id="btn-parse" onclick="parseMailText()" style="width:100%;flex:none;margin-bottom:14px">🤖 AI로 자동 분석</button>
 
       <div id="parse-result" style="display:none">
         <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:6px;border-bottom:0.5px solid var(--border)">✅ 분석 완료 — 확인 후 저장하세요</div>
@@ -493,72 +487,34 @@ async function savePerson(){
 async function removeAtt(sid,idx){const s=data.find(x=>x.id===sid);if(!s)return;s.att.splice(idx,1);await saveData();render();}
 async function delSymp(sid){if(!confirm('이 심포지엄을 삭제할까요?'))return;data=data.filter(x=>x.id!==sid);await saveData();render();}
 
-// ── PDF 드래그앤드롭 ──
-function onDragOver(e){
-  e.preventDefault();
-  const z=document.getElementById('drop-zone');
-  z.style.borderColor='var(--blue-mid)';z.style.background='var(--blue-bg)';
-}
-function onDragLeave(){
-  const z=document.getElementById('drop-zone');
-  z.style.borderColor='var(--border2)';z.style.background='transparent';
-}
-function onDrop(e){
-  e.preventDefault();onDragLeave();
-  const file=e.dataTransfer.files[0];
-  if(file&&(file.type==='application/pdf'||file.type==='image/png'||file.type==='image/jpeg')) processPDF(file);
-  else toast('PDF 또는 PNG 파일만 업로드 가능합니다');
-}
-function onFileSelect(e){ if(e.target.files[0]) processPDF(e.target.files[0]); }
-
-async function processPDF(file){
+async function parseMailText(){
+  const text=document.getElementById('mail-paste').value.trim();
+  if(!text){toast('메일 내용을 붙여넣어 주세요');return;}
   const geminiKey='AIzaSyDkYAP8N6kB6Myr0Afy7gGZtqiEfvpbxXc';
-  document.getElementById('drop-label').textContent='📄 '+file.name;
-  setParseMsg('파일 읽는 중...',false);
+  setBtnLoading('btn-parse',true,'분석 중');
+  setParseMsg('AI가 분석하고 있습니다...',false);
   document.getElementById('parse-result').style.display='none';
   try{
-    const base64=await new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=()=>res(r.result.split(',')[1]);
-      r.onerror=rej;
-      r.readAsDataURL(file);
-    });
-    setParseMsg('AI가 분석하고 있습니다...',false);
-    const isPdf=file.type==='application/pdf';
-    const mimeType=file.type;
-    const prompt=`심포지엄 안내 메일에서 정보 추출. JSON만 출력:
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:`심포지엄 안내 메일에서 정보 추출. JSON만 출력:
 {"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목","pm":"PM명","perOfficeTo":0,"totalTo":0,"officeCount":0,"toNote":"TO원문","status":"open"}
-모르면 빈문자열이나 0.`;
-    const part=isPdf
-      ? {inline_data:{mime_type:'application/pdf',data:base64}}
-      : {inline_data:{mime_type:mimeType,data:base64}};
+모르면 빈문자열이나 0.
 
-    // 503 자동 재시도 (최대 3회, 5초 간격)
-    let resp, attempts=0;
-    while(attempts<3){
-      attempts++;
-      if(attempts>1){
-        setParseMsg(`서버 과부하 — ${attempts}번째 재시도 중... (잠시 기다려주세요)`,false);
-        await new Promise(r=>setTimeout(r,5000*attempts));
-      }
-      resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{parts:[part,{text:prompt}]}],
-          generationConfig:{temperature:0,maxOutputTokens:4096}
-        })
-      });
-      if(resp.ok||resp.status!==503) break;
-    }
+메일내용:
+${text.slice(0,4000)}`}]}],
+        generationConfig:{temperature:0,maxOutputTokens:1024}
+      })
+    });
     if(!resp.ok) throw new Error('API '+resp.status);
     const j=await resp.json();
     const rawText=j.candidates?.[0]?.content?.parts?.[0]?.text;
-    if(!rawText) throw new Error('응답 텍스트 없음');
-    // JSON 추출 — 백틱 제거 후 { } 블록 추출
+    if(!rawText) throw new Error('응답 없음');
     const cleaned=rawText.replace(/```json|```/g,'').trim();
     const jsonMatch=cleaned.match(/\{[\s\S]*\}/);
-    if(!jsonMatch) throw new Error('JSON 없음. 원본: '+rawText.slice(0,100));
+    if(!jsonMatch) throw new Error('JSON 없음');
     const p=JSON.parse(jsonMatch[0]);
     let to='';
     if(p.perOfficeTo>0) to=`${p.perOfficeTo}명`;
@@ -575,9 +531,12 @@ async function processPDF(file){
     document.getElementById('parse-result').style.display='block';
     setParseMsg('✅ 분석 완료 — 확인 후 저장하세요',false);
   }catch(e){
-    setParseMsg('❌ 분석 실패 ('+e.message+') — 직접 입력 탭을 이용해주세요',true);
+    setParseMsg('❌ 분석 실패 ('+e.message+')',true);
   }
+  setBtnLoading('btn-parse',false,'🤖 AI로 자동 분석');
 }
+
+
 function setParseMsg(msg,isErr){
   const el=document.getElementById('parse-msg');
   el.textContent=msg;
@@ -618,17 +577,6 @@ async function saveParsed(){
   if(!name||!ds){toast('날짜와 심포지엄명은 필수입니다');return;}
   setBtnLoading('btn-save-parsed',true,'저장');
   const sympId='u'+Date.now();
-  let pdfUrl='';
-  // PDF 업로드
-  const pdfInput=document.getElementById('pdf-input');
-  if(pdfInput.files[0]){
-    try{
-      setParseMsg('PDF 업로드 중...',false);
-      pdfUrl=await uploadPDFToGitHub(pdfInput.files[0], sympId);
-    }catch(e){
-      toast('PDF 업로드 실패 — 데이터는 저장됩니다');
-    }
-  }
   data.push({
     id:sympId, name, ds,
     de:document.getElementById('ps-end').value||ds,
@@ -636,13 +584,25 @@ async function saveParsed(){
     pm:document.getElementById('ps-pm').value.trim(),
     to:document.getElementById('ps-to').value.trim(),
     status:document.getElementById('ps-status').value,
-    pdfUrl,
     att:[]
   });
   await saveData();
   setBtnLoading('btn-save-parsed',false,'저장');
   closeOv('ov-symp');
   render();
+}
+
+function openAddSymp(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('fs-start').value=today;
+  document.getElementById('fs-end').value=today;
+  ['fs-name','fs-product','fs-to','fs-pm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fs-status').value='open';
+  document.getElementById('mail-paste').value='';
+  document.getElementById('parse-msg').textContent='';
+  document.getElementById('parse-result').style.display='none';
+  switchTab('mail');
+  document.getElementById('ov-symp').classList.add('open');
 }
 
 
