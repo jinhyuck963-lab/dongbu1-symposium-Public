@@ -168,10 +168,10 @@
         onclick="document.getElementById('pdf-input').click()"
         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
         <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div style="font-size:13px;font-weight:500;color:var(--text2)" id="drop-label">PDF 파일을 여기에 드래그하거나 클릭하세요</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">GoFullPage로 저장한 메일 PDF</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text2)" id="drop-label">파일을 여기에 드래그하거나 클릭하세요</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">PDF 또는 PNG (GoFullPage로 저장한 메일 파일)</div>
       </div>
-      <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="onFileSelect(event)">
+      <input type="file" id="pdf-input" accept="application/pdf,image/png,image/jpeg" style="display:none" onchange="onFileSelect(event)">
 
       <div id="parse-msg" style="font-size:12px;min-height:16px;margin-bottom:10px;color:var(--teal-mid)"></div>
 
@@ -433,6 +433,7 @@ function renderCard(s){
           ${s.to?`<span class="tag teal">TO: ${s.to}</span>`:''}
           <span class="tag ${st.c}">${st.l}</span>
           ${attCount>0?`<span class="tag green">${attCount}명 신청</span>`:''}
+          ${s.pdfUrl?`<a href="${s.pdfUrl}" target="_blank" class="tag" style="background:var(--amber-bg);color:var(--amber);text-decoration:none;cursor:pointer">📄 안내문 보기</a>`:''}
         </div>
       </div>
       <button class="del-card-btn" onclick="delSymp('${s.id}')">🗑</button>
@@ -505,15 +506,15 @@ function onDragLeave(){
 function onDrop(e){
   e.preventDefault();onDragLeave();
   const file=e.dataTransfer.files[0];
-  if(file&&file.type==='application/pdf') processPDF(file);
-  else toast('PDF 파일만 업로드 가능합니다');
+  if(file&&(file.type==='application/pdf'||file.type==='image/png'||file.type==='image/jpeg')) processPDF(file);
+  else toast('PDF 또는 PNG 파일만 업로드 가능합니다');
 }
 function onFileSelect(e){ if(e.target.files[0]) processPDF(e.target.files[0]); }
 
 async function processPDF(file){
   const geminiKey='AIzaSyBs85zg5D7VD3fbPVlsyySKrSfDlUdEMn0';
   document.getElementById('drop-label').textContent='📄 '+file.name;
-  setParseMsg('PDF 읽는 중...',false);
+  setParseMsg('파일 읽는 중...',false);
   document.getElementById('parse-result').style.display='none';
   try{
     const base64=await new Promise((res,rej)=>{
@@ -523,17 +524,19 @@ async function processPDF(file){
       r.readAsDataURL(file);
     });
     setParseMsg('AI가 분석하고 있습니다...',false);
-    const prompt=`이 PDF는 제약회사 심포지엄 안내 메일입니다. 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
+    const isPdf=file.type==='application/pdf';
+    const mimeType=file.type;
+    const prompt=`이 파일은 제약회사 심포지엄 안내 메일입니다. 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
 {"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목1, 품목2","pm":"이름 PM","perOfficeTo":사무소별TO숫자또는0,"totalTo":전체TO숫자또는0,"officeCount":사무소수또는0,"toNote":"TO 원문","status":"open"}
 날짜 없으면 빈 문자열, 숫자 모르면 0.`;
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${geminiKey}`,{
+    const part=isPdf
+      ? {inline_data:{mime_type:'application/pdf',data:base64}}
+      : {inline_data:{mime_type:mimeType,data:base64}};
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        contents:[{parts:[
-          {inline_data:{mime_type:'application/pdf',data:base64}},
-          {text:prompt}
-        ]}],
+        contents:[{parts:[part,{text:prompt}]}],
         generationConfig:{temperature:0,maxOutputTokens:1000}
       })
     });
@@ -573,18 +576,51 @@ function switchTab(t){
 }
 
 
+async function uploadPDFToGitHub(file, sympId){
+  const token=getToken();
+  const base64=await new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+  const fileName=`pdfs/${sympId}.pdf`;
+  const apiUrl=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${fileName}`;
+  const r=await fetch(apiUrl,{
+    method:'PUT',
+    headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
+    body:JSON.stringify({message:`PDF 업로드: ${file.name}`,content:base64})
+  });
+  if(!r.ok) throw new Error('PDF 업로드 실패');
+  // GitHub Pages URL로 변환
+  return `https://${GH_OWNER}.github.io/${GH_REPO}/${fileName}`;
+}
+
 async function saveParsed(){
   const name=document.getElementById('ps-name').value.trim();
   const ds=document.getElementById('ps-start').value;
   if(!name||!ds){toast('날짜와 심포지엄명은 필수입니다');return;}
   setBtnLoading('btn-save-parsed',true,'저장');
+  const sympId='u'+Date.now();
+  let pdfUrl='';
+  // PDF 업로드
+  const pdfInput=document.getElementById('pdf-input');
+  if(pdfInput.files[0]){
+    try{
+      setParseMsg('PDF 업로드 중...',false);
+      pdfUrl=await uploadPDFToGitHub(pdfInput.files[0], sympId);
+    }catch(e){
+      toast('PDF 업로드 실패 — 데이터는 저장됩니다');
+    }
+  }
   data.push({
-    id:'u'+Date.now(), name, ds,
+    id:sympId, name, ds,
     de:document.getElementById('ps-end').value||ds,
     product:document.getElementById('ps-product').value.trim(),
     pm:document.getElementById('ps-pm').value.trim(),
     to:document.getElementById('ps-to').value.trim(),
     status:document.getElementById('ps-status').value,
+    pdfUrl,
     att:[]
   });
   await saveData();
