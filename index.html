@@ -526,9 +526,9 @@ async function processPDF(file){
     setParseMsg('AI가 분석하고 있습니다...',false);
     const isPdf=file.type==='application/pdf';
     const mimeType=file.type;
-    const prompt=`이 파일은 제약회사 심포지엄 안내 메일입니다. 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
-{"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목1, 품목2","pm":"이름 PM","perOfficeTo":사무소별TO숫자또는0,"totalTo":전체TO숫자또는0,"officeCount":사무소수또는0,"toNote":"TO 원문","status":"open"}
-날짜 없으면 빈 문자열, 숫자 모르면 0.`;
+    const prompt=`심포지엄 안내 메일에서 정보 추출. JSON만 출력:
+{"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목","pm":"PM명","perOfficeTo":0,"totalTo":0,"officeCount":0,"toNote":"TO원문","status":"open"}
+모르면 빈문자열이나 0.`;
     const part=isPdf
       ? {inline_data:{mime_type:'application/pdf',data:base64}}
       : {inline_data:{mime_type:mimeType,data:base64}};
@@ -546,7 +546,7 @@ async function processPDF(file){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           contents:[{parts:[part,{text:prompt}]}],
-          generationConfig:{temperature:0,maxOutputTokens:1000}
+          generationConfig:{temperature:0,maxOutputTokens:2048}
         })
       });
       if(resp.ok||resp.status!==503) break;
