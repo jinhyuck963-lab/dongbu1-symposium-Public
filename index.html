@@ -79,6 +79,9 @@
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
   .fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--blue-mid);color:#fff;border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(24,95,165,.45);z-index:100}
   .fab:active{transform:scale(.93)}
+  .tab-row{display:flex;gap:6px;margin-bottom:4px}
+  .tab-btn{flex:1;padding:8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:13px;cursor:pointer}
+  .tab-btn.on{background:var(--blue-bg);color:var(--blue);border-color:transparent;font-weight:500}
   .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
   @keyframes spin{to{transform:rotate(360deg)}}
   /* 토큰 입력 화면 */
@@ -103,6 +106,7 @@
     </div>
   </div>
   <div class="topbar-right">
+    <button class="btn-icon" onclick="showTokenScreen()" title="설정">⚙️</button>
     <button class="btn-icon" onclick="loadData()" title="새로고침">🔄</button>
     <button class="btn-add" onclick="openAddSymp()">＋ 등록</button>
   </div>
@@ -126,49 +130,111 @@
 <!-- 토큰 입력 화면 -->
 <div class="token-screen" id="token-screen">
   <div class="token-box">
-    <div class="token-title">🔑 접속 토큰 입력</div>
-    <div class="token-desc">팀장님께 받은 토큰을 입력하세요.<br>한 번만 입력하면 이 기기에서는 자동 로그인됩니다.</div>
+    <div class="token-title">🔑 접속 설정</div>
+    <div class="token-desc">팀장님께 받은 GitHub Token을 입력하세요.<br>한 번만 입력하면 이 기기에서 자동 로그인됩니다.</div>
     <div class="frow">
       <label class="flabel">GitHub Token</label>
       <input type="password" id="token-input" class="finput" placeholder="ghp_...">
     </div>
     <div class="token-msg" id="token-msg"></div>
-    <button class="btn-save" id="btn-token-save" onclick="applyToken()" style="width:100%;flex:none">확인</button>
+    <button class="btn-save" id="btn-token-save" onclick="applyToken()" style="width:100%;flex:none">저장 및 시작</button>
   </div>
 </div>
 
 <!-- 심포지엄 등록 -->
 <div class="overlay" id="ov-symp" onclick="bgClose(event,'ov-symp')">
-  <div class="sheet">
+  <div class="sheet" style="max-height:92vh;overflow-y:auto">
     <div class="sheet-handle"></div>
     <div class="sheet-title">심포지엄 등록</div>
-    <div class="f2col">
-      <div class="frow"><label class="flabel">시작일</label><input type="date" id="fs-start" class="finput"></div>
-      <div class="frow"><label class="flabel">종료일</label><input type="date" id="fs-end" class="finput"></div>
+
+    <!-- 탭 -->
+    <div class="tab-row">
+      <button class="tab-btn on" id="tab-mail" onclick="switchTab('mail')">📄 PDF 업로드</button>
+      <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✏️ 직접 입력</button>
     </div>
-    <div class="frow"><label class="flabel">심포지엄명 / 장소 *</label>
-      <input type="text" id="fs-name" class="finput" placeholder="예: 롯데호텔 소공동 — 피콕스위트"></div>
-    <div class="f2col">
-      <div class="frow"><label class="flabel">품목 / 주제</label>
-        <input type="text" id="fs-product" class="finput" placeholder="예: 세비카F, 웰체크"></div>
-      <div class="frow"><label class="flabel">TO</label>
-        <input type="text" id="fs-to" class="finput" placeholder="예: 사업부 18명"></div>
-    </div>
-    <div class="f2col">
-      <div class="frow"><label class="flabel">총괄 PM</label>
-        <input type="text" id="fs-pm" class="finput" placeholder="예: 김정욱 PM"></div>
-      <div class="frow"><label class="flabel">상태</label>
-        <select id="fs-status" class="finput">
-          <option value="open">신청 가능</option>
-          <option value="comp">경쟁 모객</option>
-          <option value="closed">마감</option>
-          <option value="tbd">공지 예정</option>
-        </select>
+
+    <!-- PDF 업로드 영역 -->
+    <div id="pane-mail">
+      <div style="background:var(--blue-bg);border-radius:var(--radius);padding:10px 12px;margin:12px 0 12px;font-size:12px;color:var(--blue);line-height:1.7">
+        <b>사용 방법</b><br>
+        1. 메일 페이지에서 GoFullPage로 PDF 저장<br>
+        2. 아래에 PDF 파일 드래그 또는 클릭하여 업로드<br>
+        3. AI 자동 분석 → 확인 후 저장
+      </div>
+
+      <!-- 드래그 업로드 존 -->
+      <div id="drop-zone"
+        style="border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:12px;transition:all .2s"
+        onclick="document.getElementById('pdf-input').click()"
+        ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text2)" id="drop-label">PDF 파일을 여기에 드래그하거나 클릭하세요</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">GoFullPage로 저장한 메일 PDF</div>
+      </div>
+      <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="onFileSelect(event)">
+
+      <div id="parse-msg" style="font-size:12px;min-height:16px;margin-bottom:10px;color:var(--teal-mid)"></div>
+
+      <div id="parse-result" style="display:none">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:6px;border-bottom:0.5px solid var(--border)">✅ 분석 완료 — 확인 후 저장하세요</div>
+        <div class="f2col">
+          <div class="frow"><label class="flabel">시작일</label><input type="date" id="ps-start" class="finput"></div>
+          <div class="frow"><label class="flabel">종료일</label><input type="date" id="ps-end" class="finput"></div>
+        </div>
+        <div class="frow"><label class="flabel">심포지엄명 / 장소</label><input type="text" id="ps-name" class="finput"></div>
+        <div class="f2col">
+          <div class="frow"><label class="flabel">품목 / 주제</label><input type="text" id="ps-product" class="finput"></div>
+          <div class="frow"><label class="flabel">PM</label><input type="text" id="ps-pm" class="finput"></div>
+        </div>
+        <div class="frow">
+          <label class="flabel">동부1 배정 TO <span style="font-weight:400;color:var(--text3)">(수정 가능)</span></label>
+          <input type="text" id="ps-to" class="finput">
+        </div>
+        <div class="frow"><label class="flabel">상태</label>
+          <select id="ps-status" class="finput">
+            <option value="open">신청 가능</option>
+            <option value="comp">경쟁 모객</option>
+            <option value="closed">마감</option>
+            <option value="tbd">공지 예정</option>
+          </select>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn-cancel" onclick="closeOv('ov-symp')">취소</button>
+          <button class="btn-save" id="btn-save-parsed" onclick="saveParsed()">저장</button>
+        </div>
       </div>
     </div>
-    <div class="sheet-actions">
-      <button class="btn-cancel" onclick="closeOv('ov-symp')">취소</button>
-      <button class="btn-save" id="btn-save-symp" onclick="saveSymp()">저장</button>
+
+    <!-- 직접 입력 영역 -->
+    <div id="pane-manual" style="display:none;margin-top:12px">
+      <div class="f2col">
+        <div class="frow"><label class="flabel">시작일</label><input type="date" id="fs-start" class="finput"></div>
+        <div class="frow"><label class="flabel">종료일</label><input type="date" id="fs-end" class="finput"></div>
+      </div>
+      <div class="frow"><label class="flabel">심포지엄명 / 장소 *</label>
+        <input type="text" id="fs-name" class="finput" placeholder="예: 롯데호텔 소공동 — 피콕스위트"></div>
+      <div class="f2col">
+        <div class="frow"><label class="flabel">품목 / 주제</label>
+          <input type="text" id="fs-product" class="finput" placeholder="예: 세비카F, 웰체크"></div>
+        <div class="frow"><label class="flabel">TO</label>
+          <input type="text" id="fs-to" class="finput" placeholder="예: 사업부 18명"></div>
+      </div>
+      <div class="f2col">
+        <div class="frow"><label class="flabel">총괄 PM</label>
+          <input type="text" id="fs-pm" class="finput" placeholder="예: 김정욱 PM"></div>
+        <div class="frow"><label class="flabel">상태</label>
+          <select id="fs-status" class="finput">
+            <option value="open">신청 가능</option>
+            <option value="comp">경쟁 모객</option>
+            <option value="closed">마감</option>
+            <option value="tbd">공지 예정</option>
+          </select>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn-cancel" onclick="closeOv('ov-symp')">취소</button>
+        <button class="btn-save" id="btn-save-symp" onclick="saveSymp()">저장</button>
+      </div>
     </div>
   </div>
 </div>
@@ -203,7 +269,8 @@ const GH_OWNER = 'jinhyuck963-lab';
 const GH_REPO  = 'dongbu1-symposium-Public';
 const GH_FILE  = 'data.json';
 const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
-const TOKEN_KEY = 'dongbu1_gh_token';
+const TOKEN_KEY   = 'dongbu1_gh_token';
+const ANT_KEY_KEY = 'dongbu1_ant_key';
 
 const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD=['일','월','화','수','목','금','토'];
@@ -225,32 +292,37 @@ let data=[], fileSha='', filter='all';
 
 function getToken(){ return localStorage.getItem(TOKEN_KEY)||''; }
 function setToken(t){ localStorage.setItem(TOKEN_KEY, t); }
+function getAntKey(){ return localStorage.getItem(ANT_KEY_KEY)||''; }
+function setAntKey(k){ if(k) localStorage.setItem(ANT_KEY_KEY, k); }
 
 function showTokenScreen(msg,isErr){
   document.getElementById('token-screen').classList.add('show');
   const el=document.getElementById('token-msg');
   el.textContent=msg||'';
   el.className='token-msg'+(isErr?' err':' ok');
+  if(getToken()) document.getElementById('token-input').value=getToken();
 }
 function hideTokenScreen(){ document.getElementById('token-screen').classList.remove('show'); }
 
 async function applyToken(){
   const t=document.getElementById('token-input').value.trim();
-  if(!t){showTokenScreen('토큰을 입력해주세요.',true);return;}
-  setBtnLoading('btn-token-save',true,'확인');
-  // 토큰 유효성 검사
+  if(!t){showTokenScreen('GitHub Token을 입력해주세요.',true);return;}
+  setBtnLoading('btn-token-save',true,'저장 및 시작');
   try{
     const r=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`,{
       headers:{Authorization:`token ${t}`,Accept:'application/vnd.github.v3+json'}
     });
-    if(r.status===401||r.status===403){showTokenScreen('토큰이 유효하지 않습니다. 다시 확인해주세요.',true);setBtnLoading('btn-token-save',false,'확인');return;}
+    if(r.status===401||r.status===403){
+      showTokenScreen('GitHub Token이 유효하지 않습니다.',true);
+      setBtnLoading('btn-token-save',false,'저장 및 시작');return;
+    }
     setToken(t);
     hideTokenScreen();
     await loadData();
   }catch(e){
     showTokenScreen('연결 오류가 발생했습니다.',true);
   }
-  setBtnLoading('btn-token-save',false,'확인');
+  setBtnLoading('btn-token-save',false,'저장 및 시작');
 }
 
 async function loadData(){
@@ -380,6 +452,11 @@ function openAddSymp(){
   document.getElementById('fs-end').value=today;
   ['fs-name','fs-product','fs-to','fs-pm'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fs-status').value='open';
+  document.getElementById('drop-label').textContent='PDF 파일을 여기에 드래그하거나 클릭하세요';
+  document.getElementById('parse-msg').textContent='';
+  document.getElementById('parse-result').style.display='none';
+  document.getElementById('pdf-input').value='';
+  switchTab('mail');
   document.getElementById('ov-symp').classList.add('open');
 }
 async function saveSymp(){
@@ -414,6 +491,108 @@ async function savePerson(){
 
 async function removeAtt(sid,idx){const s=data.find(x=>x.id===sid);if(!s)return;s.att.splice(idx,1);await saveData();render();}
 async function delSymp(sid){if(!confirm('이 심포지엄을 삭제할까요?'))return;data=data.filter(x=>x.id!==sid);await saveData();render();}
+
+// ── PDF 드래그앤드롭 ──
+function onDragOver(e){
+  e.preventDefault();
+  const z=document.getElementById('drop-zone');
+  z.style.borderColor='var(--blue-mid)';z.style.background='var(--blue-bg)';
+}
+function onDragLeave(){
+  const z=document.getElementById('drop-zone');
+  z.style.borderColor='var(--border2)';z.style.background='transparent';
+}
+function onDrop(e){
+  e.preventDefault();onDragLeave();
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type==='application/pdf') processPDF(file);
+  else toast('PDF 파일만 업로드 가능합니다');
+}
+function onFileSelect(e){ if(e.target.files[0]) processPDF(e.target.files[0]); }
+
+async function processPDF(file){
+  const geminiKey='AIzaSyBs85zg5D7VD3fbPVlsyySKrSfDlUdEMn0';
+  document.getElementById('drop-label').textContent='📄 '+file.name;
+  setParseMsg('PDF 읽는 중...',false);
+  document.getElementById('parse-result').style.display='none';
+  try{
+    const base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=()=>res(r.result.split(',')[1]);
+      r.onerror=rej;
+      r.readAsDataURL(file);
+    });
+    setParseMsg('AI가 분석하고 있습니다...',false);
+    const prompt=`이 PDF는 제약회사 심포지엄 안내 메일입니다. 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
+{"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목1, 품목2","pm":"이름 PM","perOfficeTo":사무소별TO숫자또는0,"totalTo":전체TO숫자또는0,"officeCount":사무소수또는0,"toNote":"TO 원문","status":"open"}
+날짜 없으면 빈 문자열, 숫자 모르면 0.`;
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[
+          {inline_data:{mime_type:'application/pdf',data:base64}},
+          {text:prompt}
+        ]}],
+        generationConfig:{temperature:0,maxOutputTokens:1000}
+      })
+    });
+    if(!resp.ok) throw new Error('API '+resp.status);
+    const j=await resp.json();
+    const raw=j.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
+    const p=JSON.parse(raw);
+    let to='';
+    if(p.perOfficeTo>0) to=`${p.perOfficeTo}명`;
+    else if(p.totalTo>0&&p.officeCount>0) to=`${Math.floor(p.totalTo/p.officeCount)}명 (전체 ${p.totalTo}명 ÷ ${p.officeCount}개 사무소)`;
+    else if(p.totalTo>0) to=`확인 필요 (전체 ${p.totalTo}명)`;
+    else to=p.toNote||'TO 확인 필요';
+    document.getElementById('ps-start').value=p.dateStart||'';
+    document.getElementById('ps-end').value=p.dateEnd||'';
+    document.getElementById('ps-name').value=p.name||'';
+    document.getElementById('ps-product').value=p.product||'';
+    document.getElementById('ps-pm').value=p.pm||'';
+    document.getElementById('ps-to').value=to;
+    document.getElementById('ps-status').value=p.status||'open';
+    document.getElementById('parse-result').style.display='block';
+    setParseMsg('✅ 분석 완료 — 확인 후 저장하세요',false);
+  }catch(e){
+    setParseMsg('❌ 분석 실패 ('+e.message+') — 직접 입력 탭을 이용해주세요',true);
+  }
+}
+function setParseMsg(msg,isErr){
+  const el=document.getElementById('parse-msg');
+  el.textContent=msg;
+  el.style.color=isErr?'var(--red-mid)':'var(--teal-mid)';
+}
+
+function switchTab(t){
+  document.getElementById('tab-mail').classList.toggle('on',t==='mail');
+  document.getElementById('tab-manual').classList.toggle('on',t==='manual');
+  document.getElementById('pane-mail').style.display=t==='mail'?'block':'none';
+  document.getElementById('pane-manual').style.display=t==='manual'?'block':'none';
+}
+
+
+async function saveParsed(){
+  const name=document.getElementById('ps-name').value.trim();
+  const ds=document.getElementById('ps-start').value;
+  if(!name||!ds){toast('날짜와 심포지엄명은 필수입니다');return;}
+  setBtnLoading('btn-save-parsed',true,'저장');
+  data.push({
+    id:'u'+Date.now(), name, ds,
+    de:document.getElementById('ps-end').value||ds,
+    product:document.getElementById('ps-product').value.trim(),
+    pm:document.getElementById('ps-pm').value.trim(),
+    to:document.getElementById('ps-to').value.trim(),
+    status:document.getElementById('ps-status').value,
+    att:[]
+  });
+  await saveData();
+  setBtnLoading('btn-save-parsed',false,'저장');
+  closeOv('ov-symp');
+  render();
+}
+
 
 function closeOv(id){document.getElementById(id).classList.remove('open')}
 function bgClose(e,id){if(e.target.classList.contains('overlay'))closeOv(id)}
