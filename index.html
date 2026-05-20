@@ -512,7 +512,7 @@ function onDrop(e){
 function onFileSelect(e){ if(e.target.files[0]) processPDF(e.target.files[0]); }
 
 async function processPDF(file){
-  const geminiKey='AIzaSyBs85zg5D7VD3fbPVlsyySKrSfDlUdEMn0';
+  const geminiKey='AIzaSyDkYAP8N6kB6Myr0Afy7gGZtqiEfvpbxXc';
   document.getElementById('drop-label').textContent='📄 '+file.name;
   setParseMsg('파일 읽는 중...',false);
   document.getElementById('parse-result').style.display='none';
@@ -532,14 +532,25 @@ async function processPDF(file){
     const part=isPdf
       ? {inline_data:{mime_type:'application/pdf',data:base64}}
       : {inline_data:{mime_type:mimeType,data:base64}};
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        contents:[{parts:[part,{text:prompt}]}],
-        generationConfig:{temperature:0,maxOutputTokens:1000}
-      })
-    });
+
+    // 503 자동 재시도 (최대 3회, 5초 간격)
+    let resp, attempts=0;
+    while(attempts<3){
+      attempts++;
+      if(attempts>1){
+        setParseMsg(`서버 과부하 — ${attempts}번째 재시도 중... (잠시 기다려주세요)`,false);
+        await new Promise(r=>setTimeout(r,5000*attempts));
+      }
+      resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[part,{text:prompt}]}],
+          generationConfig:{temperature:0,maxOutputTokens:1000}
+        })
+      });
+      if(resp.ok||resp.status!==503) break;
+    }
     if(!resp.ok) throw new Error('API '+resp.status);
     const j=await resp.json();
     const raw=j.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
@@ -584,15 +595,15 @@ async function uploadPDFToGitHub(file, sympId){
     r.onerror=rej;
     r.readAsDataURL(file);
   });
-  const fileName=`pdfs/${sympId}.pdf`;
+  const ext=file.type==='application/pdf'?'pdf':file.type==='image/png'?'png':'jpg';
+  const fileName=`pdfs/${sympId}.${ext}`;
   const apiUrl=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${fileName}`;
   const r=await fetch(apiUrl,{
     method:'PUT',
     headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
-    body:JSON.stringify({message:`PDF 업로드: ${file.name}`,content:base64})
+    body:JSON.stringify({message:`파일 업로드: ${file.name}`,content:base64})
   });
-  if(!r.ok) throw new Error('PDF 업로드 실패');
-  // GitHub Pages URL로 변환
+  if(!r.ok) throw new Error('업로드 실패');
   return `https://${GH_OWNER}.github.io/${GH_REPO}/${fileName}`;
 }
 
