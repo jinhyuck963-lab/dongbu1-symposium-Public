@@ -553,8 +553,11 @@ async function processPDF(file){
     }
     if(!resp.ok) throw new Error('API '+resp.status);
     const j=await resp.json();
-    const raw=j.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
-    const p=JSON.parse(raw);
+    const raw=j.candidates[0].content.parts[0].text.trim();
+    // JSON 블록 추출 (```json ... ``` 또는 { ... } 형태 모두 처리)
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('JSON 형식 응답 없음');
+    const p=JSON.parse(jsonMatch[0]);
     let to='';
     if(p.perOfficeTo>0) to=`${p.perOfficeTo}명`;
     else if(p.totalTo>0&&p.officeCount>0) to=`${Math.floor(p.totalTo/p.officeCount)}명 (전체 ${p.totalTo}명 ÷ ${p.officeCount}개 사무소)`;
