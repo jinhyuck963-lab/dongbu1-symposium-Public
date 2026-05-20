@@ -553,10 +553,13 @@ async function processPDF(file){
     }
     if(!resp.ok) throw new Error('API '+resp.status);
     const j=await resp.json();
-    const raw=j.candidates[0].content.parts[0].text.trim();
+    console.log('Gemini 응답:', JSON.stringify(j)); // 디버그용
+    const rawText=j.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!rawText) throw new Error('응답 텍스트 없음: '+JSON.stringify(j));
+    const raw=rawText.trim();
     // JSON 블록 추출 (```json ... ``` 또는 { ... } 형태 모두 처리)
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if(!jsonMatch) throw new Error('JSON 형식 응답 없음');
+    if(!jsonMatch) throw new Error('JSON 없음. 원본 응답: '+raw.slice(0,200));
     const p=JSON.parse(jsonMatch[0]);
     let to='';
     if(p.perOfficeTo>0) to=`${p.perOfficeTo}명`;
