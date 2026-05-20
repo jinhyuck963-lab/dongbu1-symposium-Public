@@ -526,7 +526,7 @@ async function processPDF(file){
     const prompt=`이 PDF는 제약회사 심포지엄 안내 메일입니다. 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
 {"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목1, 품목2","pm":"이름 PM","perOfficeTo":사무소별TO숫자또는0,"totalTo":전체TO숫자또는0,"officeCount":사무소수또는0,"toNote":"TO 원문","status":"open"}
 날짜 없으면 빈 문자열, 숫자 모르면 0.`;
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${geminiKey}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
