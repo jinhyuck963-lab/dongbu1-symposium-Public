@@ -131,10 +131,14 @@
 <div class="token-screen" id="token-screen">
   <div class="token-box">
     <div class="token-title">🔑 접속 설정</div>
-    <div class="token-desc">팀장님께 받은 GitHub Token을 입력하세요.<br>한 번만 입력하면 이 기기에서 자동 로그인됩니다.</div>
+    <div class="token-desc">한 번만 입력하면 이 기기에서 자동 로그인됩니다.</div>
     <div class="frow">
-      <label class="flabel">GitHub Token</label>
+      <label class="flabel">① GitHub Token <span style="font-weight:400;color:var(--text3)">(팀장님께 받은 토큰)</span></label>
       <input type="password" id="token-input" class="finput" placeholder="ghp_...">
+    </div>
+    <div class="frow">
+      <label class="flabel">② Gemini API Key <span style="font-weight:400;color:var(--text3)">(AI 분석용 — aistudio.google.com에서 발급)</span></label>
+      <input type="password" id="gemini-key-input" class="finput" placeholder="AIza...">
     </div>
     <div class="token-msg" id="token-msg"></div>
     <button class="btn-save" id="btn-token-save" onclick="applyToken()" style="width:100%;flex:none">저장 및 시작</button>
@@ -149,7 +153,7 @@
 
     <!-- 탭 -->
     <div class="tab-row">
-      <button class="tab-btn on" id="tab-mail" onclick="switchTab('mail')">📄 PDF 업로드</button>
+      <button class="tab-btn on" id="tab-mail" onclick="switchTab('mail')">📧 메일 붙여넣기</button>
       <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✏️ 직접 입력</button>
     </div>
 
@@ -263,8 +267,8 @@ const GH_OWNER = 'jinhyuck963-lab';
 const GH_REPO  = 'dongbu1-symposium-Public';
 const GH_FILE  = 'data.json';
 const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
-const TOKEN_KEY   = 'dongbu1_gh_token';
-const ANT_KEY_KEY = 'dongbu1_ant_key';
+const TOKEN_KEY      = 'dongbu1_gh_token';
+const GEMINI_KEY_STR = 'dongbu1_gemini_key';
 
 const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD=['일','월','화','수','목','금','토'];
@@ -282,12 +286,15 @@ const SEED=[
   {id:'s10',name:'르메르디앙 서울 명동',ds:'2026-06-27',de:'2026-06-28',product:'릭시아나',pm:'우찬하 PM',to:'1명',status:'open',att:[{p:'이상원',c:'365서울연합의원',d:''}]},
 ];
 
+const TOKEN_KEY      = 'dongbu1_gh_token';
+const GEMINI_KEY_STR = 'dongbu1_gemini_key';
+
 let data=[], fileSha='', filter='all';
 
 function getToken(){ return localStorage.getItem(TOKEN_KEY)||''; }
 function setToken(t){ localStorage.setItem(TOKEN_KEY, t); }
-function getAntKey(){ return localStorage.getItem(ANT_KEY_KEY)||''; }
-function setAntKey(k){ if(k) localStorage.setItem(ANT_KEY_KEY, k); }
+function getGeminiKey(){ return localStorage.getItem(GEMINI_KEY_STR)||''; }
+function setGeminiKey(k){ if(k) localStorage.setItem(GEMINI_KEY_STR, k); }
 
 function showTokenScreen(msg,isErr){
   document.getElementById('token-screen').classList.add('show');
@@ -295,11 +302,13 @@ function showTokenScreen(msg,isErr){
   el.textContent=msg||'';
   el.className='token-msg'+(isErr?' err':' ok');
   if(getToken()) document.getElementById('token-input').value=getToken();
+  if(getGeminiKey()) document.getElementById('gemini-key-input').value=getGeminiKey();
 }
 function hideTokenScreen(){ document.getElementById('token-screen').classList.remove('show'); }
 
 async function applyToken(){
   const t=document.getElementById('token-input').value.trim();
+  const gKey=document.getElementById('gemini-key-input').value.trim();
   if(!t){showTokenScreen('GitHub Token을 입력해주세요.',true);return;}
   setBtnLoading('btn-token-save',true,'저장 및 시작');
   try{
@@ -311,6 +320,7 @@ async function applyToken(){
       setBtnLoading('btn-token-save',false,'저장 및 시작');return;
     }
     setToken(t);
+    setGeminiKey(gKey);
     hideTokenScreen();
     await loadData();
   }catch(e){
@@ -490,7 +500,11 @@ async function delSymp(sid){if(!confirm('이 심포지엄을 삭제할까요?'))
 async function parseMailText(){
   const text=document.getElementById('mail-paste').value.trim();
   if(!text){toast('메일 내용을 붙여넣어 주세요');return;}
-  const geminiKey='AIzaSyBZXFtbd6EL94l6TYbjcRicISFKNMTbvgU';
+  const geminiKey=getGeminiKey();
+  if(!geminiKey){
+    setParseMsg('❌ Gemini API Key가 없습니다. ⚙️ 설정에서 입력해주세요.',true);
+    return;
+  }
   setBtnLoading('btn-parse',true,'분석 중');
   setParseMsg('AI가 분석하고 있습니다...',false);
   document.getElementById('parse-result').style.display='none';
