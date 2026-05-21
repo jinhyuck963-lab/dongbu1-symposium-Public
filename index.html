@@ -497,10 +497,12 @@ async function delSymp(sid){if(!confirm('이 심포지엄을 삭제할까요?'))
 async function parseMailText(){
   const text=document.getElementById('mail-paste').value.trim();
   if(!text){toast('메일 내용을 붙여넣어 주세요');return;}
-  const geminiKey=getGeminiKey();
+  
+  let geminiKey=localStorage.getItem('dongbu1_gemini_key')||'';
   if(!geminiKey){
-    setParseMsg('❌ Gemini API Key가 없습니다. ⚙️ 설정에서 입력해주세요.',true);
-    return;
+    geminiKey=prompt('Gemini API Key를 입력해주세요 (aistudio.google.com에서 발급):');
+    if(!geminiKey) return;
+    localStorage.setItem('dongbu1_gemini_key', geminiKey);
   }
   setBtnLoading('btn-parse',true,'분석 중');
   setParseMsg('AI가 분석하고 있습니다...',false);
