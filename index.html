@@ -137,11 +137,12 @@
       <input type="password" id="token-input" class="finput" placeholder="ghp_...">
     </div>
     <div class="frow">
-      <label class="flabel">② Gemini API Key <span style="font-weight:400;color:var(--text3)">(AI 분석용 — aistudio.google.com에서 발급)</span></label>
+      <label class="flabel">② Gemini API Key <span style="font-weight:400;color:var(--text3)">(AI 분석용)</span></label>
       <input type="password" id="gemini-key-input" class="finput" placeholder="AIza...">
     </div>
     <div class="token-msg" id="token-msg"></div>
-    <button class="btn-save" id="btn-token-save" onclick="applyToken()" style="width:100%;flex:none">저장 및 시작</button>
+    <button class="btn-save" id="btn-token-save" onclick="applyToken()" style="width:100%;flex:none;margin-bottom:8px">저장 및 시작</button>
+    <button onclick="saveGeminiOnly()" style="width:100%;padding:10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:13px;cursor:pointer">Gemini 키만 저장 (AI 분석용)</button>
   </div>
 </div>
 
@@ -293,7 +294,15 @@ function setToken(t){ localStorage.setItem(TOKEN_KEY, t); }
 function getGeminiKey(){ return localStorage.getItem(GEMINI_KEY_STR)||''; }
 function setGeminiKey(k){ if(k) localStorage.setItem(GEMINI_KEY_STR, k); }
 
-function showTokenScreen(msg,isErr){
+function saveGeminiOnly(){
+  const gKey=document.getElementById('gemini-key-input').value.trim();
+  if(!gKey){showTokenScreen('Gemini API Key를 입력해주세요.',true);return;}
+  localStorage.setItem('dongbu1_gemini_key', gKey);
+  showTokenScreen('✅ Gemini 키 저장됐습니다!', false);
+  setTimeout(()=>hideTokenScreen(), 1000);
+}
+
+
   document.getElementById('token-screen').classList.add('show');
   const el=document.getElementById('token-msg');
   el.textContent=msg||'';
