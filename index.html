@@ -510,13 +510,14 @@ async function parseMailText(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        contents:[{parts:[{text:`심포지엄 안내 메일에서 정보 추출. JSON만 출력:
-{"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목","pm":"PM명","perOfficeTo":0,"totalTo":0,"officeCount":0,"toNote":"TO원문","status":"open"}
-모르면 빈문자열이나 0.
+        contents:[{parts:[{text:`다음 메일에서 심포지엄 정보를 추출해서 JSON만 출력해. 설명 없이 JSON 객체만.
 
-메일내용:
+형식:
+{"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목","pm":"PM명","perOfficeTo":0,"totalTo":0,"officeCount":0,"toNote":"TO원문","status":"open"}
+
+메일:
 ${text.slice(0,4000)}`}]}],
-        generationConfig:{temperature:0,maxOutputTokens:1024}
+        generationConfig:{temperature:0,maxOutputTokens:1024,stopSequences:["```"]}
       })
     });
     if(!resp.ok) throw new Error('API '+resp.status);
