@@ -641,7 +641,18 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // 엔터키로 토큰 확인
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('token-screen').classList.contains('show'))applyToken();});
 
-loadData();
+// 시작 시 토큰 확인 후 바로 설정 화면 표시
+if(location.search.includes('reset=1')){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(GEMINI_KEY_STR);
+  location.href = location.pathname;
+}
+const _savedToken = getToken();
+if(!_savedToken){
+  showTokenScreen();
+} else {
+  loadData();
+}
 setInterval(loadData,30000);
 </script>
 </body>
