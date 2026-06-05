@@ -468,7 +468,7 @@ async function parseMail(){
 
 메일:
 ${text.slice(0,5000)}`}]}],
-        generationConfig:{temperature:0,maxOutputTokens:1024}
+        generationConfig:{temperature:0,maxOutputTokens:8192}
       })
     });
     if(!res.ok) throw new Error('API '+res.status);
