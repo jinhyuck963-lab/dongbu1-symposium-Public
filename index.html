@@ -607,6 +607,18 @@ function card(s){
         <button class="act-btn del" onclick="delSymp('${s.id}')" title="삭제">🗑</button>
       </div>
     </div>
+    <div class="att-section" onclick="event.stopPropagation()">
+      ${ac>0?'<div class="att-divider"></div><div class="att-label">신청 인원</div>':''}
+      <div class="att-pills">
+        ${(s.att||[]).map((a,i)=>`
+          <div class="att-pill">
+            <span class="pname">${a.p}</span><span class="arrow">→</span>
+            <span class="clinic">${a.c}${a.d?' ('+a.d+')':''}</span>
+            <button class="del-btn" onclick="removeAtt('${s.id}',${i})">×</button>
+          </div>`).join('')}
+        <button class="add-att-btn" onclick="openAddAtt('${s.id}')">＋ 인원 추가</button>
+      </div>
+    </div>
   </div>`;
 }
 
