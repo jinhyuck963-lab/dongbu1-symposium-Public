@@ -165,6 +165,38 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 .parse-msg{font-size:12px;min-height:16px;margin-bottom:10px;font-weight:500}
 .info-box{background:var(--accent-bg);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--accent);line-height:1.8;font-weight:500;border:1px solid var(--accent-light)}
 
+/* ── 현황 배너 ── */
+.stats-banner{background:var(--bg);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;gap:10px;overflow-x:auto}
+.stats-banner::-webkit-scrollbar{display:none}
+.stat-item{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all .15s}
+.stat-item:hover{background:var(--accent-bg);border-color:var(--accent-light)}
+.stat-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.stat-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.2px}
+.stat-count{font-size:13px;font-weight:800;color:var(--accent);margin-left:2px}
+.stat-zero .stat-count{color:var(--text3)}
+.stat-zero .stat-avatar{background:var(--bg4);color:var(--text3)}
+.chat-fab{position:fixed;bottom:28px;right:88px;width:58px;height:58px;border-radius:50%;background:var(--teal-mid);color:#fff;border:none;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(14,138,112,.45);z-index:100;transition:transform .15s}
+.chat-fab:hover{transform:scale(1.08)}
+.chat-screen{display:none;position:fixed;inset:0;z-index:250;background:var(--bg3);flex-direction:column}
+.chat-screen.show{display:flex}
+.chat-topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chat-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.chat-close{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)}
+.chat-messages{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.65;letter-spacing:-.2px;word-break:break-word;white-space:pre-wrap}
+.chat-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.ai{background:var(--bg);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;box-shadow:var(--shadow)}
+.chat-msg.thinking{color:var(--text3);font-style:italic;background:var(--bg2)}
+.chat-quick{padding:12px 16px 10px;display:flex;flex-wrap:wrap;gap:7px;background:var(--bg);border-top:1px solid var(--border)}
+.quick-btn{padding:8px 14px;border-radius:20px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-light);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.quick-btn:hover{background:var(--accent);color:#fff}
+.chat-input-row{padding:10px 16px 24px;background:var(--bg);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;padding:12px 16px;font-size:14px;border:1.5px solid var(--border2);border-radius:24px;background:var(--bg2);color:var(--text);outline:none}
+.chat-input:focus{border-color:var(--accent);background:var(--bg)}
+.chat-send{background:var(--accent);color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-send:hover{opacity:.85}
+@media(max-width:480px){.chat-fab{right:78px;width:52px;height:52px;bottom:20px}}
+
 /* ── 설정 화면 ── */
 .setup-screen{display:none;position:fixed;inset:0;z-index:300;background:var(--bg3);align-items:center;justify-content:center;padding:24px}
 .setup-screen.show{display:flex}
@@ -253,6 +285,9 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
   <button class="view-tab" id="vt-cal" onclick="setView('cal')">📅 달력</button>
 </div>
 
+<!-- 담당자별 신청 현황 -->
+<div class="stats-banner" id="stats-banner"></div>
+
 <!-- 필터 -->
 <div class="filter-scroll" id="filter-row">
   <div class="filter-inner">
@@ -288,6 +323,41 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 
 <div class="bottom-pad"></div>
 <button class="fab" onclick="openAddSymp()">＋</button>
+<button class="chat-fab" onclick="openChat()" title="AI 질문">💬</button>
+
+<!-- 담당자 신청 목록 -->
+<div class="overlay" id="ov-member-symps" onclick="bgClose(event,'ov-member-symps')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div id="member-symps-content"></div>
+    <div class="sheet-actions" style="margin-top:16px">
+      <button class="btn-cancel" onclick="closeOv('ov-member-symps')" style="flex:1">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 채팅 화면 -->
+<div class="chat-screen" id="chat-screen">
+  <div class="chat-topbar">
+    <div>
+      <div class="chat-title">💬 AI 어시스턴트</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">심포지엄 데이터에 대해 질문하세요</div>
+    </div>
+    <button class="chat-close" onclick="closeChat()">닫기</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg ai">안녕하세요! 동부1 심포지엄 데이터에 대해 무엇이든 물어보세요 😊</div>
+  </div>
+  <div class="chat-quick">
+    <button class="quick-btn" onclick="quickAsk('오늘 이후 예정된 심포지엄은 몇 개야?')">📅 예정 일정</button>
+    <button class="quick-btn" onclick="quickAsk('담당자별로 신청 현황을 알려줘')">👥 담당자별 현황</button>
+    <button class="quick-btn" onclick="quickAsk('신청 가능한데 아직 아무도 신청 안 한 심포지엄은?')">🔍 미신청 심포지엄</button>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" class="chat-input" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">↑</button>
+  </div>
+</div>
 
 <!-- 설정 -->
 <div class="setup-screen" id="setup-screen">
@@ -553,6 +623,31 @@ function isPast(s){ const t=new Date(); t.setHours(0,0,0,0); return new Date(s.d
 
 function setFilter(f,el){ filter=f; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); render(); }
 
+function renderStats(){
+  const members=getMembers();
+  const today=new Date(); today.setHours(0,0,0,0);
+  // 완료되지 않은 심포지엄만 카운트
+  const upcoming=data.filter(s=>new Date(s.de+'T00:00:00')>=today);
+  // 담당자별 카운트
+  const counts={};
+  members.forEach(m=>counts[m]=0);
+  upcoming.forEach(s=>(s.att||[]).forEach(a=>{ if(counts[a.p]!==undefined) counts[a.p]++; }));
+
+  const el=document.getElementById('stats-banner');
+  el.innerHTML=members.map(m=>{
+    const n=counts[m]||0;
+    const isZero=n===0;
+    const initials=m.charAt(0);
+    return `<div class="stat-item${isZero?' stat-zero':''}" onclick="showMemberSymps('${m}')">
+      <div class="stat-avatar">${initials}</div>
+      <div>
+        <div class="stat-name">${m}</div>
+      </div>
+      <div class="stat-count">${n}건</div>
+    </div>`;
+  }).join('');
+}
+
 function render(){
   let items=[...data].sort((a,b)=>a.ds.localeCompare(b.ds));
   if(filter==='upcoming') items=items.filter(s=>!isPast(s));
@@ -578,6 +673,7 @@ function render(){
     html+=`</div>`;
   }
   el.innerHTML=html;
+  renderStats();
 }
 
 function card(s){
@@ -901,7 +997,113 @@ function setBtn(id,disabled,label){ const b=document.getElementById(id); if(!b)r
 let _tt;
 function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2500); }
 
-if(!ghToken()){ openSetup(); } else { loadData(); }
+function showMemberSymps(name){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const symps=data.filter(s=>
+    !isPast(s) && (s.att||[]).some(a=>a.p===name)
+  ).sort((a,b)=>a.ds.localeCompare(b.ds));
+
+  const rows=symps.map(s=>{
+    const att=s.att.filter(a=>a.p===name);
+    const ds=new Date(s.ds+'T00:00:00');
+    const st=ST[s.status]||ST.open;
+    return `<div style="padding:12px;background:var(--bg2);border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:800;color:var(--accent)">${ds.getMonth()+1}/${ds.getDate()}(${WD[ds.getDay()]})</span>
+        <span class="tag ${st.c}" style="margin:0;font-size:11px">${st.l}</span>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">${s.name}</div>
+      ${att.map(a=>`<div style="font-size:12px;color:var(--text2)">→ ${a.c}${a.d?' ('+a.d+')':''}</div>`).join('')}
+    </div>`;
+  }).join('');
+
+  document.getElementById('member-symps-content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0">${name.charAt(0)}</div>
+      <div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-.4px">${name}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">예정 심포지엄 ${symps.length}건 신청</div>
+      </div>
+    </div>
+    ${symps.length>0 ? rows : '<div style="text-align:center;padding:24px;color:var(--text3);font-size:14px">예정된 신청 내역이 없습니다.</div>'}
+  `;
+  document.getElementById('ov-member-symps').classList.add('open');
+}
+
+
+function openChat(){
+  document.getElementById('chat-screen').classList.add('show');
+}
+function closeChat(){
+  document.getElementById('chat-screen').classList.remove('show');
+}
+function quickAsk(q){
+  document.getElementById('chat-input').value=q;
+  sendChat();
+}
+function addChatMsg(text, role){
+  const el=document.createElement('div');
+  el.className=`chat-msg ${role}`;
+  el.textContent=text;
+  const msgs=document.getElementById('chat-messages');
+  msgs.appendChild(el);
+  msgs.scrollTop=msgs.scrollHeight;
+  return el;
+}
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const q=input.value.trim();
+  if(!q) return;
+  input.value='';
+
+  const gm=gmKey();
+  if(!gm){ addChatMsg('Gemini API Key가 없습니다. ⚙️ 설정에서 먼저 입력해주세요.','ai'); return; }
+
+  addChatMsg(q,'user');
+  const thinking=addChatMsg('분석 중...','ai thinking');
+
+  // 데이터 요약 생성
+  const today=new Date().toISOString().split('T')[0];
+  const summary=data.map(s=>{
+    const attList=(s.att||[]).map(a=>`${a.p}(${a.c}${a.d?' '+a.d:''})`).join(', ');
+    return `[${s.ds}~${s.de}] ${s.name} | 품목:${s.product||'-'} | PM:${s.pm||'-'} | TO:${s.to||'-'} | 상태:${s.status} | 신청인원(${(s.att||[]).length}명):${attList||'없음'}`;
+  }).join('\n');
+
+  const prompt=`오늘 날짜: ${today}
+아래는 동부1사무소 심포지엄 데이터입니다:
+
+${summary}
+
+질문: ${q}
+
+답변 규칙:
+- 한국어로 답변
+- 숫자나 목록이 있으면 명확하게 정리
+- 간결하고 실용적으로
+- 이모지 적절히 사용`;
+
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${gm}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.3,maxOutputTokens:1024}
+      })
+    });
+    if(!res.ok) throw new Error('API '+res.status);
+    const j=await res.json();
+    const answer=j.candidates?.[0]?.content?.parts?.[0]?.text||'답변을 가져올 수 없습니다.';
+    thinking.className='chat-msg ai';
+    thinking.textContent=answer;
+  }catch(e){
+    thinking.className='chat-msg ai';
+    thinking.textContent='오류가 발생했습니다. ('+e.message+')';
+  }
+  document.getElementById('chat-messages').scrollTop=99999;
+}
+
+
 setInterval(loadData,30000);
 </script>
 </body>
