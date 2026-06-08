@@ -240,6 +240,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
   </div>
   <div class="topbar-right">
     <button class="btn-icon" onclick="openLog()" title="로그">📋</button>
+    <button class="btn-icon" onclick="openMembers()" title="인원관리">👥</button>
     <button class="btn-icon" onclick="openSetup()" title="설정">⚙️</button>
     <button class="btn-icon" onclick="loadData()" title="새로고침">🔄</button>
     <button class="btn-add" onclick="openAddSymp()"><span>＋</span> 등록</button>
@@ -429,6 +430,31 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
   </div>
 </div>
 
+<!-- 상세 보기 모달 -->
+<div class="overlay" id="ov-detail" onclick="bgClose(event,'ov-detail')">
+  <div class="sheet" id="detail-sheet">
+    <div class="sheet-handle"></div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- 사무소 인원 관리 모달 -->
+<div class="overlay" id="ov-members" onclick="bgClose(event,'ov-members')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">👥 사무소 인원 관리</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">신청 인원 등록 시 표시되는 담당자 목록입니다.</div>
+    <div id="members-list" style="margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="new-member-input" class="finput" placeholder="이름 입력..." style="flex:1">
+      <button class="btn-save" onclick="addMember()" style="flex:none;padding:10px 16px;width:auto">추가</button>
+    </div>
+    <div class="sheet-actions" style="margin-top:16px">
+      <button class="btn-cancel" onclick="closeOv('ov-members')" style="flex:1">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 로그 -->
 <div class="overlay" id="ov-log" onclick="bgClose(event,'ov-log')">
   <div class="sheet">
@@ -447,7 +473,9 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 const GH_OWNER='jinhyuck963-lab';
 const GH_REPO='dongbu1-symposium-Public';
 const GH_API=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/data.json`;
-const K_GH='dongbu1_gh', K_GM='dongbu1_gm', LOG_KEY='dongbu1_log';
+const K_GH='dongbu1_gh', K_GM='dongbu1_gm', LOG_KEY='dongbu1_log', K_MEMBERS='dongbu1_members';
+const DEFAULT_MEMBERS=['이상원','김은주','김은종','소민섭','허종환','최진혁','고준원'];
+const getMembers=()=>JSON.parse(localStorage.getItem(K_MEMBERS)||'null')||DEFAULT_MEMBERS;
 const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD=['일','월','화','수','목','금','토'];
 const ST={open:{l:'신청 가능',c:'green'},comp:{l:'경쟁 모객',c:'amber'},closed:{l:'마감',c:'red'},tbd:{l:'공지 예정',c:'teal'}};
@@ -558,14 +586,8 @@ function card(s){
   const dStr=same?`${ds.getMonth()+1}/${ds.getDate()}(${WD[ds.getDay()]})`:`${ds.getMonth()+1}/${ds.getDate()}–${de.getDate()}(${WD[ds.getDay()]}·${WD[de.getDay()]})`;
   const st=ST[s.status]||ST.open;
   const ac=(s.att||[]).length;
-  const pills=(s.att||[]).map((a,i)=>`
-    <div class="att-pill">
-      <span class="pname">${a.p}</span><span class="arrow">→</span>
-      <span class="clinic">${a.c}${a.d?' ('+a.d+')':''}</span>
-      <button class="del-btn" onclick="removeAtt('${s.id}',${i})">×</button>
-    </div>`).join('');
   return `
-  <div class="sym-card${isPast(s)?' past':''}" id="card-${s.id}">
+  <div class="sym-card${isPast(s)?' past':''}" id="card-${s.id}" onclick="openDetail('${s.id}')" style="cursor:pointer">
     <div class="card-head">
       <div class="date-box"><div class="mo">${MO[ds.getMonth()]}</div><div class="dy">${ds.getDate()}</div><div class="wd">${WD[ds.getDay()]}</div></div>
       <div class="card-info">
@@ -577,17 +599,13 @@ function card(s){
           ${s.to?`<span class="tag teal">TO: ${s.to}</span>`:''}
           <span class="tag ${st.c}">${st.l}</span>
           ${ac>0?`<span class="tag green">👥 ${ac}명 신청</span>`:''}
-          ${s.link?`<a href="${s.link}" target="_blank" class="tag link">🔗 링크</a>`:''}
+          ${s.link?`<a href="${s.link}" target="_blank" class="tag link" onclick="event.stopPropagation()">🔗 링크</a>`:''}
         </div>
       </div>
-      <div class="card-actions">
+      <div class="card-actions" onclick="event.stopPropagation()">
         <button class="act-btn" onclick="openEdit('${s.id}')" title="수정">✏️</button>
         <button class="act-btn del" onclick="delSymp('${s.id}')" title="삭제">🗑</button>
       </div>
-    </div>
-    <div class="att-section">
-      ${ac>0?'<div class="att-divider"></div><div class="att-label">신청 인원</div>':''}
-      <div class="att-pills">${pills}<button class="add-att-btn" onclick="openAddAtt('${s.id}')">＋ 인원 추가</button></div>
     </div>
   </div>`;
 }
@@ -672,7 +690,112 @@ async function saveManual(){
   addLog('등록',name,document.getElementById('fs-start').value); await saveData(); setBtn('btn-save-manual',false,'저장'); closeOv('ov-symp'); render();
 }
 
-function openAddAtt(sid){ document.getElementById('fp-sid').value=sid; document.getElementById('fp-clinic').value=''; document.getElementById('fp-doctor').value=''; document.getElementById('ov-person').classList.add('open'); }
+// ── 상세 보기 ──
+function openDetail(sid){
+  const s=data.find(x=>x.id===sid); if(!s) return;
+  const ds=new Date(s.ds+'T00:00:00'), de=new Date(s.de+'T00:00:00');
+  const same=s.ds===s.de;
+  const dStr=same?`${ds.getFullYear()}년 ${ds.getMonth()+1}월 ${ds.getDate()}일 (${WD[ds.getDay()]})`:`${ds.getFullYear()}년 ${ds.getMonth()+1}월 ${ds.getDate()}일 ~ ${de.getDate()}일`;
+  const st=ST[s.status]||ST.open;
+  const pills=(s.att||[]).map((a,i)=>`
+    <div class="att-pill" style="margin:0">
+      <span class="pname">${a.p}</span><span class="arrow">→</span>
+      <span class="clinic">${a.c}${a.d?' ('+a.d+')':''}</span>
+      <button class="del-btn" onclick="removeAtt('${s.id}',${i});openDetail('${s.id}')">×</button>
+    </div>`).join('');
+  document.getElementById('detail-content').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:10px">
+      <h2 style="font-size:18px;font-weight:800;letter-spacing:-.4px;line-height:1.35;flex:1">${s.name}</h2>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="act-btn" onclick="closeOv('ov-detail');openEdit('${s.id}')" title="수정">✏️</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text3);width:44px;flex-shrink:0">일정</span>
+        <span style="font-size:14px;font-weight:600">${dStr}</span>
+      </div>
+      ${s.product?`<div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text3);width:44px;flex-shrink:0">품목</span>
+        <span style="font-size:14px">${s.product}</span>
+      </div>`:''}
+      ${s.pm?`<div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text3);width:44px;flex-shrink:0">PM</span>
+        <span style="font-size:14px">${s.pm}</span>
+      </div>`:''}
+      ${s.to?`<div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text3);width:44px;flex-shrink:0">TO</span>
+        <span style="font-size:14px;font-weight:600;color:var(--teal)">${s.to}</span>
+      </div>`:''}
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text3);width:44px;flex-shrink:0">상태</span>
+        <span class="tag ${st.c}" style="margin:0">${st.l}</span>
+      </div>
+      ${s.link?`<div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text3);width:44px;flex-shrink:0">링크</span>
+        <a href="${s.link}" target="_blank" style="font-size:13px;color:var(--blue-mid);text-decoration:underline;word-break:break-all">${s.link}</a>
+      </div>`:''}
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:16px"></div>
+    <div style="font-size:12px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:10px">신청 인원 ${s.att&&s.att.length>0?`(${s.att.length}명)`:''}</div>
+    <div class="att-pills" style="margin-bottom:14px">${pills}</div>
+    <button class="add-att-btn" onclick="closeOv('ov-detail');openAddAtt('${s.id}')" style="width:100%;justify-content:center;padding:10px">＋ 인원 추가</button>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeOv('ov-detail')" style="flex:1">닫기</button>
+    </div>
+  `;
+  document.getElementById('ov-detail').classList.add('open');
+}
+
+// ── 사무소 인원 관리 ──
+function openMembers(){
+  renderMembersList();
+  document.getElementById('new-member-input').value='';
+  document.getElementById('ov-members').classList.add('open');
+}
+function renderMembersList(){
+  const members=getMembers();
+  document.getElementById('members-list').innerHTML=members.map((m,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;border:1px solid var(--border)">
+      <span style="font-size:14px;font-weight:600">${m}</span>
+      <button onclick="deleteMember(${i})" style="background:var(--red-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--red-mid);font-size:12px;font-weight:600">삭제</button>
+    </div>`).join('');
+  // fp-person select 업데이트
+  const sel=document.getElementById('fp-person');
+  if(sel){ sel.innerHTML=members.map(m=>`<option>${m}</option>`).join(''); }
+}
+function addMember(){
+  const input=document.getElementById('new-member-input');
+  const name=input.value.trim();
+  if(!name){ toast('이름을 입력해주세요'); return; }
+  const members=getMembers();
+  if(members.includes(name)){ toast('이미 있는 이름입니다'); return; }
+  members.push(name);
+  localStorage.setItem(K_MEMBERS,JSON.stringify(members));
+  input.value='';
+  renderMembersList();
+  toast(`${name} 추가됐습니다`);
+}
+function deleteMember(idx){
+  const members=getMembers();
+  if(members.length<=1){ toast('최소 1명은 있어야 합니다'); return; }
+  if(!confirm(`${members[idx]}을(를) 삭제할까요?`)) return;
+  members.splice(idx,1);
+  localStorage.setItem(K_MEMBERS,JSON.stringify(members));
+  renderMembersList();
+  toast('삭제됐습니다');
+}
+
+
+function openAddAtt(sid){
+  const members=getMembers();
+  const sel=document.getElementById('fp-person');
+  sel.innerHTML=members.map(m=>`<option>${m}</option>`).join('');
+  document.getElementById('fp-sid').value=sid;
+  document.getElementById('fp-clinic').value='';
+  document.getElementById('fp-doctor').value='';
+  document.getElementById('ov-person').classList.add('open');
+}
 async function savePerson(){
   const sid=document.getElementById('fp-sid').value, clinic=document.getElementById('fp-clinic').value.trim();
   if(!clinic){ toast('거래처명을 입력해주세요'); return; }
@@ -681,8 +804,16 @@ async function savePerson(){
   s.att.push({p:document.getElementById('fp-person').value,c:clinic,d:document.getElementById('fp-doctor').value.trim()});
   addLog('인원추가',`${s.name} — ${document.getElementById('fp-person').value} → ${clinic}`,s.ds);
   setBtn('btn-save-person',true,'저장 중...'); await saveData(); setBtn('btn-save-person',false,'등록'); closeOv('ov-person'); render();
+  // 상세 모달 열려있으면 갱신
+  if(document.getElementById('ov-detail').classList.contains('open')) openDetail(sid);
 }
-async function removeAtt(sid,idx){ const s=data.find(x=>x.id===sid); if(!s) return; const r=s.att[idx]; s.att.splice(idx,1); addLog('인원삭제',`${s.name} — ${r.p} → ${r.c}`,s.ds); await saveData(); render(); }
+async function removeAtt(sid,idx){
+  const s=data.find(x=>x.id===sid); if(!s) return;
+  const r=s.att[idx]; s.att.splice(idx,1);
+  addLog('인원삭제',`${s.name} — ${r.p} → ${r.c}`,s.ds);
+  await saveData(); render();
+  if(document.getElementById('ov-detail').classList.contains('open')) openDetail(sid);
+}
 async function delSymp(sid){ if(!confirm('삭제할까요?')) return; const s=data.find(x=>x.id===sid); if(s) addLog('삭제',s.name,s.ds); data=data.filter(x=>x.id!==sid); await saveData(); render(); }
 
 function openEdit(sid){
