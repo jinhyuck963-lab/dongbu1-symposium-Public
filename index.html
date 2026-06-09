@@ -727,7 +727,7 @@ async function parseMail(){
   setParseMsg('AI가 분석하고 있습니다...',false);
   document.getElementById('parse-result').style.display='none';
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gm}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${gm}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:`다음 심포지엄 안내 메일에서 정보를 추출해서 JSON 객체만 출력해. 설명 없이 JSON만.\n{"name":"심포지엄명 — 장소","dateStart":"YYYY-MM-DD","dateEnd":"YYYY-MM-DD","product":"품목","pm":"PM명","perOfficeTo":0,"totalTo":0,"officeCount":0,"toNote":"TO원문","link":"링크URL또는빈문자열","status":"open"}\n메일:\n${text.slice(0,5000)}`}]}],
@@ -1083,7 +1083,7 @@ ${summary}
 - 이모지 적절히 사용`;
 
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gm}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${gm}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
