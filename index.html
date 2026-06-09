@@ -597,23 +597,10 @@ async function loadData(){
   const tok=ghToken(); if(!tok){ openSetup(); return; }
   setSyncLabel('동기화 중...');
   try{
-    const headers={Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json'};
-    // ETag 캐시 — 변경없으면 304 반환으로 빠르게 처리
-    const cachedEtag=sessionStorage.getItem('dongbu1_etag');
-    if(cachedEtag) headers['If-None-Match']=cachedEtag;
-
-    const r=await fetch(GH_API,{headers});
+    const r=await fetch(GH_API,{headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json'}});
     if(r.status===401||r.status===403){ localStorage.removeItem(K_GH); openSetup(); return; }
-    if(r.status===304){
-      // 변경 없음 — 캐시된 데이터 그대로 사용
-      setSyncLabel(timeStr()+' 기준'); render(); return;
-    }
     if(r.status===404){ data=SEED; await pushData(data,''); }
-    else if(r.ok){
-      const etag=r.headers.get('ETag');
-      if(etag) sessionStorage.setItem('dongbu1_etag',etag);
-      const j=await r.json(); fileSha=j.sha; data=JSON.parse(b64dec(j.content));
-    }
+    else if(r.ok){ const j=await r.json(); fileSha=j.sha; data=JSON.parse(b64dec(j.content)); }
     else throw new Error();
   }catch(e){ if(!data.length)data=SEED; setSyncLabel('오프라인'); render(); return; }
   setSyncLabel(timeStr()+' 기준'); render();
