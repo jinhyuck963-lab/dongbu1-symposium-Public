@@ -286,12 +286,33 @@
       "link": "https://www.onvi.co.kr/symposium_7646.html",
       "status": "open",
       "att": []
+    },
+    {
+      "id": "u1781477214726",
+      "name": "ALL NEW HEART 심포지엄(병원/로컬본부 대상) — 본관 숙소동 204호",
+      "ds": "2026-07-04",
+      "de": "2026-07-05",
+      "product": "CART BP pro, All NEW thynC, 퍼즐 AI",
+      "pm": "하지수",
+      "to": "전체 35명",
+      "link": "",
+      "status": "open",
+      "att": []
     }
   ],
   "hotels": [
     {
       "id": "h1781476261553",
       "name": "대웅경영개발원(DMD)",
+      "mealImg": "",
+      "roomImg": "",
+      "phones": [],
+      "memo": ""
+    },
+    {
+      "id": "h1781477214726",
+      "name": "본관 숙소동 204호",
+      "keywords": [],
       "mealImg": "",
       "roomImg": "",
       "phones": [],
