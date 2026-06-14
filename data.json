@@ -194,6 +194,18 @@
             "2": false,
             "3": false
           }
+        },
+        {
+          "p": "이상원",
+          "c": "아산바른내과",
+          "d": "강동욱, 노혜리",
+          "st": "confirmed",
+          "checks": {
+            "0": false,
+            "1": false,
+            "2": false,
+            "3": false
+          }
         }
       ]
     },
