@@ -321,7 +321,20 @@
       "to": "",
       "link": "https://www.onvi.co.kr/symposium_7620.html",
       "status": "open",
-      "att": []
+      "att": [
+        {
+          "p": "이상원",
+          "c": "으뜸성모마취통증의학과",
+          "d": "김지현",
+          "st": "confirmed",
+          "checks": {
+            "0": false,
+            "1": false,
+            "2": false,
+            "3": false
+          }
+        }
+      ]
     }
   ],
   "hotels": [
