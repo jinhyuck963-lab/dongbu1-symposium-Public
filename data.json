@@ -261,7 +261,20 @@
       "to": "4명",
       "link": "",
       "status": "open",
-      "att": []
+      "att": [
+        {
+          "p": "허종환",
+          "c": "강동천호내과",
+          "d": "나종화",
+          "st": "confirmed",
+          "checks": {
+            "0": false,
+            "1": false,
+            "2": false,
+            "3": false
+          }
+        }
+      ]
     },
     {
       "id": "u1781251971958",
