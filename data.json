@@ -274,6 +274,18 @@
       "link": "",
       "status": "open",
       "att": []
+    },
+    {
+      "id": "u1781476261552",
+      "name": "The Bridge SYMPOSIUM — 대웅경영개발원(DMD)",
+      "ds": "2026-06-20",
+      "de": "2026-06-21",
+      "product": "펙수클루, 실리스칸, 스토보클로, 엔블로",
+      "pm": "윤형주",
+      "to": "17명 (전체 35명 ÷ 2개 사무소)",
+      "link": "https://www.onvi.co.kr/symposium_7646.html",
+      "status": "open",
+      "att": []
     }
   ],
   "hotels": [
@@ -296,6 +308,14 @@
     {
       "id": "h1781475752077",
       "name": "힐리언스 선마을",
+      "mealImg": "",
+      "roomImg": "",
+      "phones": [],
+      "memo": ""
+    },
+    {
+      "id": "h1781476261553",
+      "name": "대웅경영개발원(DMD)",
       "mealImg": "",
       "roomImg": "",
       "phones": [],
