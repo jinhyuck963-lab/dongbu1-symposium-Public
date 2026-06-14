@@ -194,6 +194,18 @@
             "2": false,
             "3": false
           }
+        },
+        {
+          "p": "김은종",
+          "c": "서울굿모닝내과",
+          "d": "김덕수",
+          "st": "confirmed",
+          "checks": {
+            "0": false,
+            "1": false,
+            "2": false,
+            "3": false
+          }
         }
       ]
     },
