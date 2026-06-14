@@ -139,6 +139,18 @@
         "c": "테스트",
         "d": "테스트1",
         "st": "reserved"
+      },
+      {
+        "p": "이상원",
+        "c": "ㅇㅇㅇ",
+        "d": "ㅇㅇㅇ",
+        "st": "reserved",
+        "checks": {
+          "0": false,
+          "1": false,
+          "2": false,
+          "3": false
+        }
       }
     ]
   },
