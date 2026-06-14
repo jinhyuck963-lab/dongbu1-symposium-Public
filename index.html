@@ -459,6 +459,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
     <div class="sheet-title" id="hotel-edit-title">호텔 추가</div>
     <input type="hidden" id="hotel-edit-id">
     <div class="frow"><label class="flabel">호텔명 *</label><input type="text" id="hotel-name" class="finput" placeholder="예: 소공동 롯데호텔"></div>
+    <div class="frow"><label class="flabel">매칭 키워드 <span style="font-weight:400;color:var(--text3)">(쉼표로 구분, 예: 롯데,소공동)</span></label><input type="text" id="hotel-keywords" class="finput" placeholder="예: 롯데, 소공동 롯데, 롯데호텔"></div>
     <div class="frow"><label class="flabel">식사 안내 이미지 URL</label><input type="text" id="hotel-meal-img" class="finput" placeholder="https://..."></div>
     <div class="frow">
       <label class="flabel">식당 연락처</label>
@@ -886,14 +887,67 @@ function renderCal(){ const today=new Date(); today.setHours(0,0,0,0); document.
 // ── 호텔 DB ──
 function openHotels(){ renderHotelsList(); document.getElementById('ov-hotels').classList.add('open'); }
 function renderHotelsList(){ const el=document.getElementById('hotels-list'); if(!hotels.length){ el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3);font-size:14px">등록된 호텔이 없습니다.<br>심포지엄 등록 시 자동으로 추가됩니다.</div>'; return; } el.innerHTML=hotels.map(h=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--border);cursor:pointer" onclick="openHotelDetail('${h.id}')"><div style="width:38px;height:38px;border-radius:10px;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏨</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${h.name}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${[h.phones&&h.phones.length?'📞 '+h.phones.length+'개':'',h.mealImg?'🍽 식사안내':'',h.roomImg?'🛏 객실안내':'',h.memo?'📝 특이사항':''].filter(Boolean).join('  ')||'정보 없음'}</div></div><button onclick="event.stopPropagation();openEditHotel('${h.id}')" style="background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px">✏️</button></div>`).join(''); }
-function openAddHotel(){ document.getElementById('hotel-edit-title').textContent='호텔 추가'; document.getElementById('hotel-edit-id').value=''; ['hotel-name','hotel-meal-img','hotel-room-img','hotel-memo'].forEach(id=>document.getElementById(id).value=''); document.getElementById('hotel-phones-list').innerHTML=''; addPhoneField(); document.getElementById('ov-hotel-edit').classList.add('open'); }
-function openEditHotel(hid){ const h=hotels.find(x=>x.id===hid); if(!h) return; document.getElementById('hotel-edit-title').textContent='호텔 수정'; document.getElementById('hotel-edit-id').value=hid; document.getElementById('hotel-name').value=h.name||''; document.getElementById('hotel-meal-img').value=h.mealImg||''; document.getElementById('hotel-room-img').value=h.roomImg||''; document.getElementById('hotel-memo').value=h.memo||''; const pl=document.getElementById('hotel-phones-list'); pl.innerHTML=''; (h.phones&&h.phones.length?h.phones:['']).forEach(p=>addPhoneField(p)); document.getElementById('ov-hotel-edit').classList.add('open'); }
+function openAddHotel(){ document.getElementById('hotel-edit-title').textContent='호텔 추가'; document.getElementById('hotel-edit-id').value=''; ['hotel-name','hotel-keywords','hotel-meal-img','hotel-room-img','hotel-memo'].forEach(id=>document.getElementById(id).value=''); document.getElementById('hotel-phones-list').innerHTML=''; addPhoneField(); document.getElementById('ov-hotel-edit').classList.add('open'); }
+function openEditHotel(hid){ const h=hotels.find(x=>x.id===hid); if(!h) return; document.getElementById('hotel-edit-title').textContent='호텔 수정'; document.getElementById('hotel-edit-id').value=hid; document.getElementById('hotel-name').value=h.name||''; document.getElementById('hotel-keywords').value=(h.keywords||[]).join(', '); document.getElementById('hotel-meal-img').value=h.mealImg||''; document.getElementById('hotel-room-img').value=h.roomImg||''; document.getElementById('hotel-memo').value=h.memo||''; const pl=document.getElementById('hotel-phones-list'); pl.innerHTML=''; (h.phones&&h.phones.length?h.phones:['']).forEach(p=>addPhoneField(p)); document.getElementById('ov-hotel-edit').classList.add('open'); }
 function addPhoneField(val=''){ const pl=document.getElementById('hotel-phones-list'); const row=document.createElement('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:6px'; row.innerHTML=`<input type="text" class="finput phone-field" value="${val}" placeholder="예: 02-771-1000 (레스토랑명)" style="flex:1"><button onclick="this.parentElement.remove()" style="background:var(--red-bg);border:none;border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--red-mid);font-size:14px;flex-shrink:0">×</button>`; pl.appendChild(row); }
-async function saveHotel(){ const hid=document.getElementById('hotel-edit-id').value; const name=document.getElementById('hotel-name').value.trim(); if(!name){ toast('호텔명을 입력해주세요'); return; } const phones=[...document.querySelectorAll('.phone-field')].map(i=>i.value.trim()).filter(Boolean); const h={id:hid||'h'+Date.now(),name,mealImg:document.getElementById('hotel-meal-img').value.trim(),roomImg:document.getElementById('hotel-room-img').value.trim(),phones,memo:document.getElementById('hotel-memo').value.trim()}; if(hid){ const idx=hotels.findIndex(x=>x.id===hid); if(idx>=0)hotels[idx]=h; else hotels.push(h); } else hotels.push(h); await saveData(); toast(`${name} 저장됐습니다`); closeOv('ov-hotel-edit'); renderHotelsList(); }
-function openHotelDetail(hid){ const h=hotels.find(x=>x.id===hid); if(!h) return; document.getElementById('hotel-detail-content').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div style="font-size:18px;font-weight:800">🏨 ${h.name}</div><button onclick="closeOv('ov-hotel-detail');openEditHotel('${h.id}')" class="act-btn">✏️</button></div>${h.mealImg?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">🍽 식사 안내</div><img src="${h.mealImg}" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onclick="window.open('${h.mealImg}')" onerror="this.style.display='none'"></div>`:''}${h.phones&&h.phones.length?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📞 식당 연락처</div>${h.phones.map(p=>`<a href="tel:${p.replace(/[^0-9+]/g,'')}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;border:1px solid var(--border)"><span style="font-size:20px">📞</span><span style="font-size:14px;font-weight:600;color:var(--blue-mid)">${p}</span></a>`).join('')}</div>`:''}${h.roomImg?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">🛏 객실 안내</div><img src="${h.roomImg}" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onclick="window.open('${h.roomImg}')" onerror="this.style.display='none'"></div>`:''}${h.memo?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📝 특이사항</div><div style="font-size:14px;line-height:1.7;background:var(--bg2);padding:12px 14px;border-radius:var(--radius);white-space:pre-wrap">${h.memo}</div></div>`:''}<div class="sheet-actions"><button class="btn-cancel" onclick="closeOv('ov-hotel-detail')" style="flex:1">닫기</button><button onclick="deleteHotel('${h.id}')" style="flex:none;padding:13px 20px;border:none;border-radius:var(--radius);background:var(--red-bg);color:var(--red-mid);font-size:14px;font-weight:700;cursor:pointer">삭제</button></div>`; document.getElementById('ov-hotel-detail').classList.add('open'); }
+async function saveHotel(){
+  const hid=document.getElementById('hotel-edit-id').value;
+  const name=document.getElementById('hotel-name').value.trim();
+  if(!name){ toast('호텔명을 입력해주세요'); return; }
+  const keywords=document.getElementById('hotel-keywords').value.split(',').map(k=>k.trim()).filter(Boolean);
+  const phones=[...document.querySelectorAll('.phone-field')].map(i=>i.value.trim()).filter(Boolean);
+  const h={id:hid||'h'+Date.now(),name,keywords,mealImg:document.getElementById('hotel-meal-img').value.trim(),roomImg:document.getElementById('hotel-room-img').value.trim(),phones,memo:document.getElementById('hotel-memo').value.trim()};
+  if(hid){ const idx=hotels.findIndex(x=>x.id===hid); if(idx>=0)hotels[idx]=h; else hotels.push(h); } else hotels.push(h);
+  await saveData(); toast(`${name} 저장됐습니다`); closeOv('ov-hotel-edit'); renderHotelsList();
+}
+function openHotelDetail(hid){ const h=hotels.find(x=>x.id===hid); if(!h) return; document.getElementById('hotel-detail-content').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div style="font-size:18px;font-weight:800">🏨 ${h.name}</div><button onclick="closeOv('ov-hotel-detail');openEditHotel('${h.id}')" class="act-btn">✏️</button></div>${h.keywords&&h.keywords.length?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:6px">🔑 매칭 키워드</div><div style="font-size:13px;color:var(--text2)">${h.keywords.join(', ')}</div></div>`:''}${h.mealImg?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">🍽 식사 안내</div><img src="${h.mealImg}" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onclick="window.open('${h.mealImg}')" onerror="this.style.display='none'"></div>`:''}${h.phones&&h.phones.length?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📞 식당 연락처</div>${h.phones.map(p=>`<a href="tel:${p.replace(/[^0-9+]/g,'')}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;border:1px solid var(--border)"><span style="font-size:20px">📞</span><span style="font-size:14px;font-weight:600;color:var(--blue-mid)">${p}</span></a>`).join('')}</div>`:''}${h.roomImg?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">🛏 객실 안내</div><img src="${h.roomImg}" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onclick="window.open('${h.roomImg}')" onerror="this.style.display='none'"></div>`:''}${h.memo?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📝 특이사항</div><div style="font-size:14px;line-height:1.7;background:var(--bg2);padding:12px 14px;border-radius:var(--radius);white-space:pre-wrap">${h.memo}</div></div>`:''}<div class="sheet-actions"><button class="btn-cancel" onclick="closeOv('ov-hotel-detail')" style="flex:1">닫기</button><button onclick="deleteHotel('${h.id}')" style="flex:none;padding:13px 20px;border:none;border-radius:var(--radius);background:var(--red-bg);color:var(--red-mid);font-size:14px;font-weight:700;cursor:pointer">삭제</button></div>`; document.getElementById('ov-hotel-detail').classList.add('open'); }
 async function deleteHotel(hid){ if(!confirm('삭제할까요?')) return; hotels=hotels.filter(x=>x.id!==hid); await saveData(); closeOv('ov-hotel-detail'); renderHotelsList(); toast('삭제됐습니다'); }
-function autoCreateHotel(sympName){ if(!sympName||!sympName.includes('—')) return; const hotelName=sympName.split('—')[1].trim(); if(!hotelName) return; const exists=hotels.some(h=>h.name===hotelName||hotelName.includes(h.name)||h.name.includes(hotelName)); if(!exists){ hotels.push({id:'h'+Date.now(),name:hotelName,mealImg:'',roomImg:'',phones:[],memo:''}); toast(`🏨 ${hotelName} 호텔 DB 자동 추가`); } }
-function getMatchedHotel(sympName){ if(!sympName||!sympName.includes('—')) return null; const hotelName=sympName.split('—')[1].trim(); return hotels.find(h=>h.name===hotelName||hotelName.includes(h.name)||h.name.includes(hotelName))||null; }
+function autoCreateHotel(sympName){ if(!sympName) return; const hotelName=sympName.includes('—')?sympName.split('—')[1].trim():sympName.trim(); if(!hotelName) return; const exists=hotels.some(h=>_hotelMatch(h,hotelName)); if(!exists){ hotels.push({id:'h'+Date.now(),name:hotelName,keywords:[],mealImg:'',roomImg:'',phones:[],memo:''}); toast(`🏨 ${hotelName} 호텔 DB 자동 추가`); } }
+
+// 키워드+부분매칭 기반 호텔 검색
+function _hotelMatch(h, query){
+  const q=query.toLowerCase();
+  const n=h.name.toLowerCase();
+  if(n===q||n.includes(q)||q.includes(n)) return true;
+  return (h.keywords||[]).some(k=>{ const kl=k.toLowerCase(); return q.includes(kl)||kl.includes(q); });
+}
+
+// AI 매칭 캐시
+const _hotelMatchCache={};
+
+function getMatchedHotel(sympName){
+  if(!sympName) return null;
+  // 캐시 확인
+  if(_hotelMatchCache[sympName]!==undefined){
+    return _hotelMatchCache[sympName]?hotels.find(h=>h.id===_hotelMatchCache[sympName])||null:null;
+  }
+  // 키워드 기반 매칭
+  const query=sympName.includes('—')?sympName.split('—')[1].trim():sympName;
+  const matched=hotels.find(h=>_hotelMatch(h,query))||hotels.find(h=>_hotelMatch(h,sympName))||null;
+  if(matched){ _hotelMatchCache[sympName]=matched.id; return matched; }
+  // AI 매칭 (비동기, 결과는 다음 렌더에 반영)
+  if(hotels.length>0) _aiMatchHotel(sympName);
+  _hotelMatchCache[sympName]=null;
+  return null;
+}
+
+async function _aiMatchHotel(sympName){
+  const gm=gmKey(); if(!gm||hotels.length===0) return;
+  try{
+    const hotelList=hotels.map(h=>`${h.name}${h.keywords&&h.keywords.length?' ('+h.keywords.join(',')+')':''}`).join('\n');
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
+      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':gm},
+      body:JSON.stringify({contents:[{parts:[{text:`심포지엄 장소명과 호텔 DB를 비교해서 같은 호텔이면 호텔명만 답해. 아니면 "없음"만 답해. 설명 없이.\n\n심포지엄명: ${sympName}\n\n호텔 DB:\n${hotelList}`}]}],generationConfig:{temperature:0,maxOutputTokens:50}})
+    });
+    if(!res.ok) return;
+    const j=await res.json();
+    const ans=(j.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
+    if(ans&&ans!=='없음'){
+      const matched=hotels.find(h=>h.name===ans||ans.includes(h.name)||h.name.includes(ans));
+      if(matched){ _hotelMatchCache[sympName]=matched.id; render(); }
+    } else { _hotelMatchCache[sympName]=null; }
+  }catch(e){ /* 조용히 실패 */ }
+}
 
 // ── 채팅 ──
 function openChat(){ document.getElementById('chat-screen').classList.add('show'); }
