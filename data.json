@@ -285,6 +285,18 @@
             "2": false,
             "3": false
           }
+        },
+        {
+          "p": "소민섭",
+          "c": "365류마고내과",
+          "d": "안상희",
+          "st": "confirmed",
+          "checks": {
+            "0": false,
+            "1": false,
+            "2": false,
+            "3": false
+          }
         }
       ]
     },
