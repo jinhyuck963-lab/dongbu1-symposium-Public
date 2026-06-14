@@ -290,30 +290,6 @@
   ],
   "hotels": [
     {
-      "id": "h1781475752077",
-      "name": "본관 숙소동 204호",
-      "mealImg": "",
-      "roomImg": "",
-      "phones": [],
-      "memo": ""
-    },
-    {
-      "id": "h1781475752077",
-      "name": "웨스틴 서울 파르나스",
-      "mealImg": "",
-      "roomImg": "",
-      "phones": [],
-      "memo": ""
-    },
-    {
-      "id": "h1781475752077",
-      "name": "힐리언스 선마을",
-      "mealImg": "",
-      "roomImg": "",
-      "phones": [],
-      "memo": ""
-    },
-    {
       "id": "h1781476261553",
       "name": "대웅경영개발원(DMD)",
       "mealImg": "",
