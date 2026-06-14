@@ -310,6 +310,18 @@
       "link": "",
       "status": "open",
       "att": []
+    },
+    {
+      "id": "u1781477883883",
+      "name": "펙수클루 TRIPLE Symposium — 롯데호텔 서울",
+      "ds": "2026-06-20",
+      "de": "2026-06-21",
+      "product": "펙수클루",
+      "pm": "서동진",
+      "to": "확인 필요 (전체 56명)",
+      "link": "https://www.onvi.co.kr/symposium_7620.html",
+      "status": "open",
+      "att": []
     }
   ],
   "hotels": [
@@ -324,6 +336,15 @@
     {
       "id": "h1781477214726",
       "name": "본관 숙소동 204호",
+      "keywords": [],
+      "mealImg": "",
+      "roomImg": "",
+      "phones": [],
+      "memo": ""
+    },
+    {
+      "id": "h1781477883883",
+      "name": "롯데호텔 서울",
       "keywords": [],
       "mealImg": "",
       "roomImg": "",
