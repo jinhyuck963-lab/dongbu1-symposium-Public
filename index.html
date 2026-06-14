@@ -98,6 +98,9 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 .att-label{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
 .att-pills{display:flex;flex-wrap:wrap;gap:6px}
 .att-pill{display:flex;align-items:center;gap:6px;background:var(--green-bg);border-radius:20px;padding:7px 12px 7px 10px;font-size:12px;color:var(--green)}
+.att-pill.reserved{background:var(--amber-bg);color:var(--amber)}
+.att-pill .status-dot{width:7px;height:7px;border-radius:50%;background:var(--green-mid);flex-shrink:0}
+.att-pill.reserved .status-dot{background:var(--amber)}
 .att-pill .pname{font-weight:700}
 .att-pill .arrow{opacity:.4;font-size:11px}
 .att-pill .clinic{color:var(--green-mid)}
@@ -197,6 +200,24 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 .chat-send:hover{opacity:.85}
 @media(max-width:480px){.chat-fab{right:78px;width:52px;height:52px;bottom:20px}}
 
+/* ── 인원 팝업 ── */
+.att-popup{position:fixed;z-index:400;background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);border:1px solid var(--border);padding:16px;width:260px;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.att-popup-name{font-size:14px;font-weight:800;margin-bottom:10px;letter-spacing:-.3px}
+.att-popup-status{display:flex;gap:6px;margin-bottom:12px}
+.att-popup-status button{flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.att-popup-status button.active-reserved{border-color:var(--amber);background:var(--amber-bg);color:var(--amber)}
+.att-popup-status button.active-confirmed{border-color:var(--green-mid);background:var(--green-bg);color:var(--green)}
+.att-checklist{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.att-check-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:var(--bg2);cursor:pointer;border:1px solid var(--border);transition:all .15s}
+.att-check-item:hover{background:var(--bg4)}
+.att-check-item.checked{background:var(--green-bg);border-color:var(--green-mid)}
+.att-check-icon{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .15s}
+.att-check-item.checked .att-check-icon{background:var(--green-mid);border-color:var(--green-mid);color:#fff}
+.att-check-label{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.2px}
+.att-check-item.checked .att-check-label{color:var(--green);opacity:.7}
+.att-popup-close{width:100%;padding:10px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+
 /* ── 설정 화면 ── */
 .setup-screen{display:none;position:fixed;inset:0;z-index:300;background:var(--bg3);align-items:center;justify-content:center;padding:24px}
 .setup-screen.show{display:flex}
@@ -272,6 +293,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
   </div>
   <div class="topbar-right">
     <button class="btn-icon" onclick="openLog()" title="로그">📋</button>
+    <button class="btn-icon" onclick="openHotels()" title="호텔DB">🏨</button>
     <button class="btn-icon" onclick="openMembers()" title="인원관리">👥</button>
     <button class="btn-icon" onclick="openSetup()" title="설정">⚙️</button>
     <button class="btn-icon" onclick="loadData()" title="새로고침">🔄</button>
@@ -456,13 +478,31 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
     <div class="sheet-title">신청 인원 등록</div>
     <input type="hidden" id="fp-sid">
     <div class="frow"><label class="flabel">담당자 *</label>
-      <select id="fp-person" class="finput">
-        <option>이상원</option><option>김은주</option><option>김은종</option>
-        <option>소민섭</option><option>허종환</option><option>최진혁</option><option>고준원</option>
-      </select>
+      <select id="fp-person" class="finput"></select>
     </div>
     <div class="frow"><label class="flabel">거래처명 *</label><input type="text" id="fp-clinic" class="finput" placeholder="예: 세실내과"></div>
     <div class="frow"><label class="flabel">원장명</label><input type="text" id="fp-doctor" class="finput" placeholder="예: 이치훈 (선택)"></div>
+    <div class="frow"><label class="flabel">신청 상태 *</label>
+      <div style="display:flex;gap:8px;margin-top:2px">
+        <button type="button" id="fp-status-reserved" onclick="setPersonStatus('reserved')"
+          style="flex:1;padding:12px;border-radius:var(--radius);border:2px solid var(--amber);background:var(--amber-bg);color:var(--amber);font-size:14px;font-weight:700;cursor:pointer">
+          🟠 예약
+        </button>
+        <button type="button" id="fp-status-confirmed" onclick="setPersonStatus('confirmed')"
+          style="flex:1;padding:12px;border-radius:var(--radius);border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer">
+          ✅ 확정
+        </button>
+      </div>
+    </div>
+    <input type="hidden" id="fp-status" value="reserved">
+    <div class="frow"><label class="flabel">체크리스트</label>
+      <div style="display:flex;flex-direction:column;gap:5px" id="fp-checklist">
+        <div class="att-check-item" onclick="toggleNewCheck(0)"><div class="att-check-icon" id="nck-0"></div><div class="att-check-label">CRM 등록</div></div>
+        <div class="att-check-item" onclick="toggleNewCheck(1)"><div class="att-check-icon" id="nck-1"></div><div class="att-check-label">인원 확인</div></div>
+        <div class="att-check-item" onclick="toggleNewCheck(2)"><div class="att-check-icon" id="nck-2"></div><div class="att-check-label">요청 내용</div></div>
+        <div class="att-check-item" onclick="toggleNewCheck(3)"><div class="att-check-icon" id="nck-3"></div><div class="att-check-label">식당 예약</div></div>
+      </div>
+    </div>
     <div class="sheet-actions">
       <button class="btn-cancel" onclick="closeOv('ov-person')">취소</button>
       <button class="btn-save" id="btn-save-person" onclick="savePerson()">등록</button>
@@ -508,6 +548,51 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
   </div>
 </div>
 
+<!-- 호텔 DB -->
+<div class="overlay" id="ov-hotels" onclick="bgClose(event,'ov-hotels')">
+  <div class="sheet" style="max-width:520px">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div class="sheet-title" style="margin:0">🏨 호텔 DB</div>
+      <button class="btn-save" onclick="openAddHotel()" style="flex:none;padding:8px 14px;font-size:13px">＋ 추가</button>
+    </div>
+    <div id="hotels-list"></div>
+    <div class="sheet-actions" style="margin-top:16px">
+      <button class="btn-cancel" onclick="closeOv('ov-hotels')" style="flex:1">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 호텔 추가/수정 모달 -->
+<div class="overlay" id="ov-hotel-edit" onclick="bgClose(event,'ov-hotel-edit')">
+  <div class="sheet" style="max-width:520px">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="hotel-edit-title">호텔 추가</div>
+    <input type="hidden" id="hotel-edit-id">
+    <div class="frow"><label class="flabel">호텔명 *</label><input type="text" id="hotel-name" class="finput" placeholder="예: 소공동 롯데호텔"></div>
+    <div class="frow"><label class="flabel">식사 안내 이미지 URL</label><input type="text" id="hotel-meal-img" class="finput" placeholder="https://..."></div>
+    <div class="frow">
+      <label class="flabel">식당 연락처 <span style="font-weight:400;color:var(--text3)">(여러 개 가능)</span></label>
+      <div id="hotel-phones-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <button onclick="addPhoneField()" style="width:100%;padding:9px;border:1.5px dashed var(--border2);border-radius:var(--radius);background:transparent;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer">＋ 연락처 추가</button>
+    </div>
+    <div class="frow"><label class="flabel">객실 안내 이미지 URL</label><input type="text" id="hotel-room-img" class="finput" placeholder="https://..."></div>
+    <div class="frow"><label class="flabel">특이사항</label><textarea id="hotel-memo" class="finput" rows="3" placeholder="주차, 체크인 시간, 주의사항 등..."></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeOv('ov-hotel-edit')">취소</button>
+      <button class="btn-save" id="btn-save-hotel" onclick="saveHotel()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 호텔 상세 보기 -->
+<div class="overlay" id="ov-hotel-detail" onclick="bgClose(event,'ov-hotel-detail')">
+  <div class="sheet" style="max-width:520px">
+    <div class="sheet-handle"></div>
+    <div id="hotel-detail-content"></div>
+  </div>
+</div>
+
 <!-- 사무소 인원 관리 모달 -->
 <div class="overlay" id="ov-members" onclick="bgClose(event,'ov-members')">
   <div class="sheet">
@@ -538,14 +623,17 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="att-popup" class="att-popup" style="display:none"></div>
 
 <script>
 const GH_OWNER='jinhyuck963-lab';
 const GH_REPO='dongbu1-symposium-Public';
 const GH_API=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/data.json`;
-const K_GH='dongbu1_gh', K_GM='dongbu1_gm', LOG_KEY='dongbu1_log', K_MEMBERS='dongbu1_members';
+const K_GH='dongbu1_gh', K_GM='dongbu1_gm', LOG_KEY='dongbu1_log', K_MEMBERS='dongbu1_members', K_HOTELS='dongbu1_hotels';
 const DEFAULT_MEMBERS=['이상원','김은주','김은종','소민섭','허종환','최진혁','고준원'];
 const getMembers=()=>JSON.parse(localStorage.getItem(K_MEMBERS)||'null')||DEFAULT_MEMBERS;
+const getHotels=()=>JSON.parse(localStorage.getItem(K_HOTELS)||'[]');
+const saveHotels=(h)=>localStorage.setItem(K_HOTELS,JSON.stringify(h));
 const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD=['일','월','화','수','목','금','토'];
 const ST={open:{l:'신청 가능',c:'green'},comp:{l:'경쟁 모객',c:'amber'},closed:{l:'마감',c:'red'},tbd:{l:'공지 예정',c:'teal'}};
@@ -562,9 +650,11 @@ const SEED=[
   {id:'s10',name:'르메르디앙 서울 명동',ds:'2026-06-27',de:'2026-06-28',product:'릭시아나',pm:'우찬하 PM',to:'1명',link:'',status:'open',att:[{p:'이상원',c:'365서울연합의원',d:''}]},
 ];
 
-let data=[], fileSha='', filter='all';
+let data=[], hotels=[], fileSha='', filter='all';
 const ghToken=()=>localStorage.getItem(K_GH)||'';
 const gmKey=()=>localStorage.getItem(K_GM)||'';
+const getHotels=()=>hotels;
+const saveHotels=(h)=>{ hotels=h; saveData(); };
 
 function openSetup(){
   document.getElementById('setup-gh-token').value=ghToken();
@@ -599,15 +689,27 @@ async function loadData(){
   try{
     const r=await fetch(GH_API,{headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json'}});
     if(r.status===401||r.status===403){ localStorage.removeItem(K_GH); openSetup(); return; }
-    if(r.status===404){ data=SEED; await pushData(data,''); }
-    else if(r.ok){ const j=await r.json(); fileSha=j.sha; data=JSON.parse(b64dec(j.content)); }
-    else throw new Error();
+    if(r.status===404){
+      data=SEED; hotels=[];
+      await pushData(data,hotels,'');
+    } else if(r.ok){
+      const j=await r.json(); fileSha=j.sha;
+      const parsed=JSON.parse(b64dec(j.content));
+    if(Array.isArray(parsed)){ 
+      data=parsed; hotels=[];
+      // localStorage에 호텔 데이터 있으면 마이그레이션
+      const localHotels=JSON.parse(localStorage.getItem(K_HOTELS)||'[]');
+      if(localHotels.length){ hotels=localHotels; localStorage.removeItem(K_HOTELS); }
+    }
+    else { data=parsed.symps||[]; hotels=parsed.hotels||[]; }
+    } else throw new Error();
   }catch(e){ if(!data.length)data=SEED; setSyncLabel('오프라인'); render(); return; }
   setSyncLabel(timeStr()+' 기준'); render();
 }
-async function pushData(d,sha){
+async function pushData(d,h,sha){
   const tok=ghToken();
-  const body={message:'업데이트',content:b64enc(JSON.stringify(d,null,2))};
+  const payload={symps:d, hotels:h};
+  const body={message:'업데이트',content:b64enc(JSON.stringify(payload,null,2))};
   if(sha) body.sha=sha;
   const r=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.status===401||r.status===403){ localStorage.removeItem(K_GH); openSetup(); throw new Error('401'); }
@@ -615,7 +717,7 @@ async function pushData(d,sha){
   const j=await r.json(); fileSha=j.content.sha;
 }
 async function saveData(){
-  try{ await pushData(data,fileSha); setSyncLabel(timeStr()+' 저장됨'); toast('저장됐습니다 ✓'); }
+  try{ await pushData(data,hotels,fileSha); setSyncLabel(timeStr()+' 저장됨'); toast('저장됐습니다 ✓'); }
   catch(e){ if(e.message!=='401') toast('저장 실패'); }
 }
 
@@ -694,9 +796,9 @@ function card(s){
           ${s.pm?`<span class="tag">${s.pm}</span>`:''}
           ${s.to?`<span class="tag teal">TO: ${s.to}</span>`:''}
           <span class="tag ${st.c}">${st.l}</span>
-          ${ac>0?`<span class="tag green">👥 ${ac}명 신청</span>`:''}
+          ${ac>0?`<span class="tag green">✅ ${(s.att||[]).filter(a=>a.st!=='reserved').length}확정 ${(s.att||[]).filter(a=>a.st==='reserved').length>0?'🟠'+(s.att||[]).filter(a=>a.st==='reserved').length+'예약':''}</span>`:''}
           ${s.link?`<a href="${s.link}" target="_blank" class="tag link" onclick="event.stopPropagation()">🔗 링크</a>`:''}
-        </div>
+          ${(()=>{ const h=getMatchedHotel(s.name); return h?`<span class="tag accent" onclick="event.stopPropagation();openHotelDetail('${h.id}')" style="cursor:pointer">🏨 호텔정보</span>`:''; })()}        </div>
       </div>
       <div class="card-actions" onclick="event.stopPropagation()">
         <button class="act-btn" onclick="openEdit('${s.id}')" title="수정">✏️</button>
@@ -706,12 +808,17 @@ function card(s){
     <div class="att-section" onclick="event.stopPropagation()">
       ${ac>0?'<div class="att-divider"></div><div class="att-label">신청 인원</div>':''}
       <div class="att-pills">
-        ${(s.att||[]).map((a,i)=>`
-          <div class="att-pill">
+        ${(s.att||[]).map((a,i)=>{
+          const isReserved=a.st==='reserved';
+          const checks=a.checks||{};
+          const checkCount=Object.values(checks).filter(Boolean).length;
+          return `<div class="att-pill${isReserved?' reserved':''}" onclick="event.stopPropagation();openAttPopup(event,'${s.id}',${i})" style="cursor:pointer">
+            <div class="status-dot"></div>
             <span class="pname">${a.p}</span><span class="arrow">→</span>
             <span class="clinic">${a.c}${a.d?' ('+a.d+')':''}</span>
-            <button class="del-btn" onclick="removeAtt('${s.id}',${i})">×</button>
-          </div>`).join('')}
+            ${checkCount>0?`<span style="font-size:10px;font-weight:800;opacity:.7">${checkCount}/4</span>`:''}
+          </div>`;
+        }).join('')}
         <button class="add-att-btn" onclick="openAddAtt('${s.id}')">＋ 인원 추가</button>
       </div>
     </div>
@@ -788,14 +895,14 @@ async function saveParsed(){
   if(!name||!ds){ toast('날짜와 심포지엄명은 필수입니다'); return; }
   setBtn('btn-save-parsed',true,'저장 중...');
   data.push({id:'u'+Date.now(),name,ds,de:document.getElementById('ps-end').value||ds,product:document.getElementById('ps-product').value.trim(),pm:document.getElementById('ps-pm').value.trim(),to:document.getElementById('ps-to').value.trim(),link:document.getElementById('ps-link').value.trim(),status:document.getElementById('ps-status').value,att:[]});
-  addLog('등록',name,document.getElementById('ps-start').value); await saveData(); setBtn('btn-save-parsed',false,'저장'); closeOv('ov-symp'); render();
+  addLog('등록',name,document.getElementById('ps-start').value); autoCreateHotel(name); await saveData(); setBtn('btn-save-parsed',false,'저장'); closeOv('ov-symp'); render();
 }
 async function saveManual(){
   const name=document.getElementById('fs-name').value.trim(), ds=document.getElementById('fs-start').value;
   if(!name||!ds){ toast('날짜와 심포지엄명은 필수입니다'); return; }
   setBtn('btn-save-manual',true,'저장 중...');
   data.push({id:'u'+Date.now(),name,ds,de:document.getElementById('fs-end').value||ds,product:document.getElementById('fs-product').value.trim(),pm:document.getElementById('fs-pm').value.trim(),to:document.getElementById('fs-to').value.trim(),link:document.getElementById('fs-link').value.trim(),status:document.getElementById('fs-status').value,att:[]});
-  addLog('등록',name,document.getElementById('fs-start').value); await saveData(); setBtn('btn-save-manual',false,'저장'); closeOv('ov-symp'); render();
+  addLog('등록',name,document.getElementById('fs-start').value); autoCreateHotel(name); await saveData(); setBtn('btn-save-manual',false,'저장'); closeOv('ov-symp'); render();
 }
 
 // ── 상세 보기 ──
@@ -805,12 +912,16 @@ function openDetail(sid){
   const same=s.ds===s.de;
   const dStr=same?`${ds.getFullYear()}년 ${ds.getMonth()+1}월 ${ds.getDate()}일 (${WD[ds.getDay()]})`:`${ds.getFullYear()}년 ${ds.getMonth()+1}월 ${ds.getDate()}일 ~ ${de.getDate()}일`;
   const st=ST[s.status]||ST.open;
-  const pills=(s.att||[]).map((a,i)=>`
-    <div class="att-pill" style="margin:0">
+  const pills=(s.att||[]).map((a,i)=>{
+    const isReserved=a.st==='reserved';
+    return `<div class="att-pill${isReserved?' reserved':''}" style="margin:0">
+      <div class="status-dot"></div>
       <span class="pname">${a.p}</span><span class="arrow">→</span>
       <span class="clinic">${a.c}${a.d?' ('+a.d+')':''}</span>
+      <button style="background:none;border:none;cursor:pointer;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:2px;color:inherit;opacity:.8" onclick="toggleAttStatus('${s.id}',${i});openDetail('${s.id}')" title="${isReserved?'확정으로 변경':'예약으로 변경'}">${isReserved?'확정↑':'예약↓'}</button>
       <button class="del-btn" onclick="removeAtt('${s.id}',${i});openDetail('${s.id}')">×</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('detail-content').innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:10px">
       <h2 style="font-size:18px;font-weight:800;letter-spacing:-.4px;line-height:1.35;flex:1">${s.name}</h2>
@@ -895,6 +1006,102 @@ function deleteMember(idx){
 }
 
 
+// ── 인원 팝업 ──
+const CHECKLIST=['CRM 등록','인원 확인','요청 내용','식당 예약'];
+let _popupSid='', _popupIdx=-1;
+
+function openAttPopup(e, sid, idx){
+  e.stopPropagation();
+  _popupSid=sid; _popupIdx=idx;
+  const s=data.find(x=>x.id===sid); if(!s) return;
+  const a=s.att[idx];
+  const isReserved=a.st==='reserved';
+  const checks=a.checks||{};
+  const popup=document.getElementById('att-popup');
+  popup.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="att-popup-name">${a.p} → ${a.c}</div>
+      <button onclick="closeAttPopup()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3);padding:0;line-height:1">×</button>
+    </div>
+    <div class="att-popup-status">
+      <button id="pop-reserved" class="${isReserved?'active-reserved':''}" onclick="popSetStatus('reserved')">🟠 예약</button>
+      <button id="pop-confirmed" class="${!isReserved?'active-confirmed':''}" onclick="popSetStatus('confirmed')">✅ 확정</button>
+    </div>
+    <div class="att-checklist">
+      ${CHECKLIST.map((c,ci)=>`
+        <div class="att-check-item${checks[ci]?' checked':''}" onclick="popToggleCheck(${ci})">
+          <div class="att-check-icon">${checks[ci]?'✓':''}</div>
+          <div class="att-check-label">${c}</div>
+        </div>`).join('')}
+    </div>
+    <button class="att-popup-close" onclick="closeAttPopup()">저장 완료</button>
+    <button onclick="removeAtt('${sid}',${idx});closeAttPopup()" style="width:100%;margin-top:6px;padding:8px;border:1px solid var(--border2);border-radius:10px;background:transparent;color:var(--red-mid);font-size:12px;font-weight:600;cursor:pointer">삭제</button>
+  `;
+  // 위치 계산
+  const rect=e.target.closest('.att-pill')?.getBoundingClientRect()||{left:e.clientX,top:e.clientY,width:0};
+  const pw=260, ph=300;
+  let left=rect.left, top=rect.bottom+8;
+  if(left+pw>window.innerWidth) left=window.innerWidth-pw-12;
+  if(top+ph>window.innerHeight) top=rect.top-ph-8;
+  popup.style.left=left+'px';
+  popup.style.top=top+'px';
+  popup.style.display='block';
+  setTimeout(()=>document.addEventListener('click',outsidePopupClose),50);
+}
+
+function outsidePopupClose(e){
+  const popup=document.getElementById('att-popup');
+  if(!popup.contains(e.target)){ closeAttPopup(); }
+}
+
+async function closeAttPopup(){
+  document.getElementById('att-popup').style.display='none';
+  document.removeEventListener('click',outsidePopupClose);
+  if(_popupSid) { await saveData(); render(); _popupSid=''; _popupIdx=-1; }
+}
+
+function popSetStatus(st){
+  const s=data.find(x=>x.id===_popupSid); if(!s) return;
+  s.att[_popupIdx].st=st;
+  document.getElementById('pop-reserved').className=st==='reserved'?'active-reserved':'';
+  document.getElementById('pop-confirmed').className=st==='confirmed'?'active-confirmed':'';
+}
+
+function popToggleCheck(ci){
+  const s=data.find(x=>x.id===_popupSid); if(!s) return;
+  if(!s.att[_popupIdx].checks) s.att[_popupIdx].checks={};
+  s.att[_popupIdx].checks[ci]=!s.att[_popupIdx].checks[ci];
+  // UI 즉시 반영
+  const items=document.querySelectorAll('#att-popup .att-check-item');
+  if(items[ci]){
+    items[ci].classList.toggle('checked');
+    items[ci].querySelector('.att-check-icon').textContent=s.att[_popupIdx].checks[ci]?'✓':'';
+  }
+}
+
+
+const _newChecks={0:false,1:false,2:false,3:false};
+function toggleNewCheck(ci){
+  _newChecks[ci]=!_newChecks[ci];
+  const icon=document.getElementById('nck-'+ci);
+  const item=icon?.closest('.att-check-item');
+  if(icon) icon.textContent=_newChecks[ci]?'✓':'';
+  if(item) item.classList.toggle('checked',!!_newChecks[ci]);
+}
+
+function setPersonStatus(st){
+  document.getElementById('fp-status').value=st;
+  const rBtn=document.getElementById('fp-status-reserved');
+  const cBtn=document.getElementById('fp-status-confirmed');
+  if(st==='reserved'){
+    rBtn.style.border='2px solid var(--amber)'; rBtn.style.background='var(--amber-bg)'; rBtn.style.color='var(--amber)';
+    cBtn.style.border='1.5px solid var(--border2)'; cBtn.style.background='transparent'; cBtn.style.color='var(--text2)';
+  } else {
+    cBtn.style.border='2px solid var(--green-mid)'; cBtn.style.background='var(--green-bg)'; cBtn.style.color='var(--green)';
+    rBtn.style.border='1.5px solid var(--border2)'; rBtn.style.background='transparent'; rBtn.style.color='var(--text2)';
+  }
+}
+
 function openAddAtt(sid){
   const members=getMembers();
   const sel=document.getElementById('fp-person');
@@ -902,6 +1109,9 @@ function openAddAtt(sid){
   document.getElementById('fp-sid').value=sid;
   document.getElementById('fp-clinic').value='';
   document.getElementById('fp-doctor').value='';
+  // 체크리스트 초기화
+  [0,1,2,3].forEach(ci=>{ _newChecks[ci]=false; const icon=document.getElementById('nck-'+ci); const item=icon?.closest('.att-check-item'); if(icon)icon.textContent=''; if(item)item.classList.remove('checked'); });
+  setPersonStatus('reserved');
   document.getElementById('ov-person').classList.add('open');
 }
 async function savePerson(){
@@ -909,10 +1119,9 @@ async function savePerson(){
   if(!clinic){ toast('거래처명을 입력해주세요'); return; }
   const s=data.find(x=>x.id===sid); if(!s) return;
   s.att=s.att||[];
-  s.att.push({p:document.getElementById('fp-person').value,c:clinic,d:document.getElementById('fp-doctor').value.trim()});
+  s.att.push({p:document.getElementById('fp-person').value,c:clinic,d:document.getElementById('fp-doctor').value.trim(),st:document.getElementById('fp-status').value||'reserved',checks:{..._newChecks}});
   addLog('인원추가',`${s.name} — ${document.getElementById('fp-person').value} → ${clinic}`,s.ds);
   setBtn('btn-save-person',true,'저장 중...'); await saveData(); setBtn('btn-save-person',false,'등록'); closeOv('ov-person'); render();
-  // 상세 모달 열려있으면 갱신
   if(document.getElementById('ov-detail').classList.contains('open')) openDetail(sid);
 }
 async function removeAtt(sid,idx){
@@ -1030,6 +1239,105 @@ function showMemberSymps(name){
   document.getElementById('ov-member-symps').classList.add('open');
 }
 
+
+// ── 호텔 DB ──
+function openHotels(){
+  renderHotelsList();
+  document.getElementById('ov-hotels').classList.add('open');
+}
+function renderHotelsList(){
+  const hotels=getHotels();
+  const el=document.getElementById('hotels-list');
+  if(!hotels.length){
+    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3);font-size:14px">등록된 호텔이 없습니다.<br>심포지엄 등록 시 자동으로 추가됩니다.</div>';
+    return;
+  }
+  el.innerHTML=hotels.map(h=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--border);cursor:pointer" onclick="openHotelDetail('${h.id}')">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏨</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700">${h.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${[h.phones&&h.phones.length?'📞 '+h.phones.length+'개':'',h.mealImg?'🍽 식사안내':'',h.roomImg?'🛏 객실안내':'',h.memo?'📝 특이사항':''].filter(Boolean).join('  ')}</div>
+      </div>
+      <button onclick="event.stopPropagation();openEditHotel('${h.id}')" style="background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px">✏️</button>
+    </div>`).join('');
+}
+function openAddHotel(){
+  document.getElementById('hotel-edit-title').textContent='호텔 추가';
+  document.getElementById('hotel-edit-id').value='';
+  ['hotel-name','hotel-meal-img','hotel-room-img','hotel-memo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('hotel-phones-list').innerHTML='';
+  addPhoneField();
+  document.getElementById('ov-hotel-edit').classList.add('open');
+}
+function openEditHotel(hid){
+  const h=getHotels().find(x=>x.id===hid); if(!h) return;
+  document.getElementById('hotel-edit-title').textContent='호텔 수정';
+  document.getElementById('hotel-edit-id').value=hid;
+  document.getElementById('hotel-name').value=h.name||'';
+  document.getElementById('hotel-meal-img').value=h.mealImg||'';
+  document.getElementById('hotel-room-img').value=h.roomImg||'';
+  document.getElementById('hotel-memo').value=h.memo||'';
+  const pl=document.getElementById('hotel-phones-list'); pl.innerHTML='';
+  (h.phones&&h.phones.length?h.phones:['']).forEach(p=>addPhoneField(p));
+  document.getElementById('ov-hotel-edit').classList.add('open');
+}
+function addPhoneField(val=''){
+  const pl=document.getElementById('hotel-phones-list');
+  const row=document.createElement('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:6px';
+  row.innerHTML=`<input type="text" class="finput phone-field" value="${val}" placeholder="예: 02-771-1000 (레스토랑명)" style="flex:1"><button onclick="this.parentElement.remove()" style="background:var(--red-bg);border:none;border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--red-mid);font-size:14px;flex-shrink:0">×</button>`;
+  pl.appendChild(row);
+}
+function saveHotel(){
+  const hid=document.getElementById('hotel-edit-id').value;
+  const name=document.getElementById('hotel-name').value.trim();
+  if(!name){ toast('호텔명을 입력해주세요'); return; }
+  const phones=[...document.querySelectorAll('.phone-field')].map(i=>i.value.trim()).filter(Boolean);
+  const h={id:hid||'h'+Date.now(),name,mealImg:document.getElementById('hotel-meal-img').value.trim(),roomImg:document.getElementById('hotel-room-img').value.trim(),phones,memo:document.getElementById('hotel-memo').value.trim()};
+  const hotels=getHotels();
+  if(hid){ const idx=hotels.findIndex(x=>x.id===hid); if(idx>=0)hotels[idx]=h; else hotels.push(h); } else hotels.push(h);
+  saveHotels(hotels); toast(`${name} 저장됐습니다`); closeOv('ov-hotel-edit'); renderHotelsList();
+}
+function openHotelDetail(hid){
+  const h=getHotels().find(x=>x.id===hid); if(!h) return;
+  document.getElementById('hotel-detail-content').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-size:18px;font-weight:800">🏨 ${h.name}</div>
+      <button onclick="closeOv('ov-hotel-detail');openEditHotel('${h.id}')" class="act-btn">✏️</button>
+    </div>
+    ${h.mealImg?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">🍽 식사 안내</div><img src="${h.mealImg}" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onclick="window.open('${h.mealImg}')" onerror="this.parentElement.innerHTML+='<div style=color:var(--red-mid);font-size:12px>이미지를 불러올 수 없습니다</div>'"></div>`:''}
+    ${h.phones&&h.phones.length?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📞 식당 연락처</div>${h.phones.map(p=>`<a href="tel:${p.replace(/[^0-9+]/g,'')}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;text-decoration:none;border:1px solid var(--border)"><span style="font-size:20px">📞</span><span style="font-size:14px;font-weight:600;color:var(--blue-mid)">${p}</span></a>`).join('')}</div>`:''}
+    ${h.roomImg?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">🛏 객실 안내</div><img src="${h.roomImg}" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onclick="window.open('${h.roomImg}')" onerror="this.parentElement.innerHTML+='<div style=color:var(--red-mid);font-size:12px>이미지를 불러올 수 없습니다</div>'"></div>`:''}
+    ${h.memo?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📝 특이사항</div><div style="font-size:14px;line-height:1.7;background:var(--bg2);padding:12px 14px;border-radius:var(--radius);white-space:pre-wrap">${h.memo}</div></div>`:''}
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeOv('ov-hotel-detail')" style="flex:1">닫기</button>
+      <button onclick="deleteHotel('${h.id}')" style="flex:none;padding:13px 20px;border:none;border-radius:var(--radius);background:var(--red-bg);color:var(--red-mid);font-size:14px;font-weight:700;cursor:pointer">삭제</button>
+    </div>
+  `;
+  document.getElementById('ov-hotel-detail').classList.add('open');
+}
+function deleteHotel(hid){
+  if(!confirm('삭제할까요?')) return;
+  saveHotels(getHotels().filter(x=>x.id!==hid));
+  closeOv('ov-hotel-detail'); renderHotelsList(); toast('삭제됐습니다');
+}
+function autoCreateHotel(sympName){
+  if(!sympName||!sympName.includes('—')) return;
+  const hotelName=sympName.split('—')[1].trim();
+  if(!hotelName) return;
+  const hotels=getHotels();
+  const exists=hotels.some(h=>h.name===hotelName||hotelName.includes(h.name)||h.name.includes(hotelName));
+  if(!exists){
+    hotels.push({id:'h'+Date.now(),name:hotelName,mealImg:'',roomImg:'',phones:[],memo:''});
+    saveHotels(hotels);
+    toast(`🏨 ${hotelName} 호텔 DB 자동 추가`);
+  }
+}
+function getMatchedHotel(sympName){
+  if(!sympName||!sympName.includes('—')) return null;
+  const hotelName=sympName.split('—')[1].trim();
+  return getHotels().find(h=>h.name===hotelName||hotelName.includes(h.name)||h.name.includes(hotelName))||null;
+}
 
 function openChat(){
   document.getElementById('chat-screen').classList.add('show');
