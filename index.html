@@ -232,12 +232,13 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans 
 
 /* ── 모바일 최적화 ── */
 @media(max-width:480px){
-  .topbar{padding:0 12px;height:56px}
-  .topbar-logo{width:30px;height:30px;font-size:15px}
-  .topbar-title{font-size:14px}
-  .topbar-right{gap:4px}
-  .btn-icon{padding:8px 9px;font-size:14px}
-  .btn-add{padding:8px 12px;font-size:13px}
+  .topbar{padding:0 10px;height:52px}
+  .topbar-logo{width:28px;height:28px;font-size:14px;border-radius:8px}
+  .topbar-title{font-size:13px}
+  .topbar-sub{font-size:10px}
+  .topbar-right{gap:3px}
+  .btn-icon{padding:7px 8px;font-size:14px;border-radius:8px}
+  .btn-add{padding:8px 10px;font-size:12px;gap:3px}
   .view-tab{padding:11px 14px;font-size:13px}
   .filter-scroll{padding:8px 12px}
   .chip{padding:7px 12px;font-size:12px}
@@ -695,13 +696,17 @@ async function loadData(){
     } else if(r.ok){
       const j=await r.json(); fileSha=j.sha;
       const parsed=JSON.parse(b64dec(j.content));
-    if(Array.isArray(parsed)){ 
-      data=parsed; hotels=[];
-      // localStorage에 호텔 데이터 있으면 마이그레이션
-      const localHotels=JSON.parse(localStorage.getItem(K_HOTELS)||'[]');
-      if(localHotels.length){ hotels=localHotels; localStorage.removeItem(K_HOTELS); }
-    }
-    else { data=parsed.symps||[]; hotels=parsed.hotels||[]; }
+      if(Array.isArray(parsed)){
+        // 구버전 → 신버전 마이그레이션
+        data=parsed;
+        const localHotels=JSON.parse(localStorage.getItem(K_HOTELS)||'[]');
+        hotels=localHotels;
+        if(localHotels.length) localStorage.removeItem(K_HOTELS);
+        await pushData(data,hotels,fileSha);
+      } else {
+        data=parsed.symps||[];
+        hotels=parsed.hotels||[];
+      }
     } else throw new Error();
   }catch(e){ if(!data.length)data=SEED; setSyncLabel('오프라인'); render(); return; }
   setSyncLabel(timeStr()+' 기준'); render();
