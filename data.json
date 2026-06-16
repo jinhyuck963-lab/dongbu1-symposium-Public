@@ -370,6 +370,18 @@
             "2": false,
             "3": false
           }
+        },
+        {
+          "p": "허종환",
+          "c": "바른마음내과",
+          "d": "김주경",
+          "st": "reserved",
+          "checks": {
+            "0": false,
+            "1": false,
+            "2": false,
+            "3": false
+          }
         }
       ]
     },
