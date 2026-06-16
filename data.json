@@ -358,6 +358,18 @@
             "2": false,
             "3": false
           }
+        },
+        {
+          "p": "허종환",
+          "c": "강동천호내과",
+          "d": "나종화",
+          "st": "reserved",
+          "checks": {
+            "0": true,
+            "1": false,
+            "2": false,
+            "3": false
+          }
         }
       ]
     },
