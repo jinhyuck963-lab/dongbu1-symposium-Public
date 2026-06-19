@@ -470,6 +470,18 @@
       "link": "",
       "status": "open",
       "att": []
+    },
+    {
+      "id": "u1781847504929",
+      "name": "펙수클루 TRIPLE Symposium — 라한셀렉트 전주",
+      "ds": "2026-07-25",
+      "de": "2026-07-26",
+      "product": "펙수클루",
+      "pm": "김주빈",
+      "to": "사업부 TO 9",
+      "link": "",
+      "status": "open",
+      "att": []
     }
   ],
   "hotels": [
@@ -511,6 +523,15 @@
     {
       "id": "h1781478253323",
       "name": "웨스틴 서울 파르나스호텔",
+      "keywords": [],
+      "mealImg": "",
+      "roomImg": "",
+      "phones": [],
+      "memo": ""
+    },
+    {
+      "id": "h1781847504930",
+      "name": "라한셀렉트 전주",
       "keywords": [],
       "mealImg": "",
       "roomImg": "",
