@@ -444,20 +444,7 @@
       "to": "1명 (전체 54명 ÷ 36개 사무소)",
       "link": "https://www.onvi.co.kr/symposium_7639.html",
       "status": "open",
-      "att": [
-        {
-          "p": "허종환",
-          "c": "더편한마디의원",
-          "d": "신재영",
-          "st": "reserved",
-          "checks": {
-            "0": false,
-            "1": false,
-            "2": false,
-            "3": false
-          }
-        }
-      ]
+      "att": []
     },
     {
       "id": "u1781478300505",
