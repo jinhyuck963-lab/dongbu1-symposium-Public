@@ -517,7 +517,20 @@
       "to": "TO 확인 필요",
       "link": "",
       "status": "open",
-      "att": []
+      "att": [
+        {
+          "p": "김은종",
+          "c": "하남웰니스내과",
+          "d": "하인균",
+          "st": "confirmed",
+          "checks": {
+            "0": true,
+            "1": true,
+            "2": true,
+            "3": false
+          }
+        }
+      ]
     }
   ],
   "hotels": [
