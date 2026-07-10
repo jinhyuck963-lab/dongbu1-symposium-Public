@@ -493,7 +493,20 @@
       "to": "3명 (전체 30명 ÷ 8개 사무소)",
       "link": "https://www.onvi.co.kr/symposium_7659.html",
       "status": "open",
-      "att": []
+      "att": [
+        {
+          "p": "김은종",
+          "c": "dddd",
+          "d": "dddd",
+          "st": "confirmed",
+          "checks": {
+            "0": true,
+            "1": true,
+            "2": true,
+            "3": true
+          }
+        }
+      ]
     },
     {
       "id": "u1782181149293",
@@ -658,6 +671,12 @@
     }
   ],
   "logs": [
+    {
+      "action": "인원추가",
+      "name": "Day On Symposium — 대웅제약 본관 베어홀(신관 지하1층) — 김은종 → dddd",
+      "date": "2026-07-10",
+      "time": "2026-07-10T01:15:56.460Z"
+    },
     {
       "action": "인원삭제",
       "name": "Day On Symposium — 대웅제약 본관 베어홀(신관 지하1층) — 김은주 → 세실내과",
