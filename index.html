@@ -957,7 +957,7 @@ function openAttPopup(e,sid,idx){
     <div class="att-popup-status"><button id="pop-reserved" class="${isR?'active-reserved':''}" onclick="popSetStatus('reserved')">🟠 예약</button><button id="pop-confirmed" class="${!isR?'active-confirmed':''}" onclick="popSetStatus('confirmed')">✅ 확정</button></div>
     <div class="att-checklist">${CHECKLIST.map((c,ci)=>`<div class="att-check-item${checks[ci]?' checked':''}" onclick="popToggleCheck(${ci})"><div class="att-check-icon">${checks[ci]?'✓':''}</div><div class="att-check-label">${c}</div></div>`).join('')}</div>
     <button class="att-popup-close" onclick="closeAttPopup()">저장 완료</button>
-    <button onclick="removeAtt('${sid}',${idx});closeAttPopup()" style="width:100%;margin-top:6px;padding:8px;border:1px solid var(--border2);border-radius:10px;background:transparent;color:var(--red-mid);font-size:12px;font-weight:600;cursor:pointer">삭제</button>`;
+    <button onclick="removeAtt('${sid}',${idx});closeAttPopup(true)" style="width:100%;margin-top:6px;padding:8px;border:1px solid var(--border2);border-radius:10px;background:transparent;color:var(--red-mid);font-size:12px;font-weight:600;cursor:pointer">삭제</button>`;
   const rect=e.target.closest('.att-pill')?.getBoundingClientRect()||{left:e.clientX,top:e.clientY};
   const pw=270, ph=320;
   let left=rect.left, top=(rect.bottom||rect.top)+8;
@@ -967,10 +967,11 @@ function openAttPopup(e,sid,idx){
   setTimeout(()=>document.addEventListener('click',outsidePopupClose),50);
 }
 function outsidePopupClose(e){ if(!document.getElementById('att-popup').contains(e.target)) closeAttPopup(); }
-async function closeAttPopup(){
+async function closeAttPopup(skipSave=false){
   document.getElementById('att-popup').style.display='none';
   document.removeEventListener('click',outsidePopupClose);
-  if(_popupSid){ await saveData(); render(); _popupSid=''; _popupIdx=-1; }
+  if(!skipSave && _popupSid){ await saveData(); render(); }
+  _popupSid=''; _popupIdx=-1;
 }
 function popSetStatus(st){ const s=data.find(x=>x.id===_popupSid); if(!s) return; s.att[_popupIdx].st=st; document.getElementById('pop-reserved').className=st==='reserved'?'active-reserved':''; document.getElementById('pop-confirmed').className=st==='confirmed'?'active-confirmed':''; }
 function popToggleCheck(ci){ const s=data.find(x=>x.id===_popupSid); if(!s) return; if(!s.att[_popupIdx].checks) s.att[_popupIdx].checks={}; s.att[_popupIdx].checks[ci]=!s.att[_popupIdx].checks[ci]; const items=document.querySelectorAll('#att-popup .att-check-item'); if(items[ci]){ items[ci].classList.toggle('checked'); items[ci].querySelector('.att-check-icon').textContent=s.att[_popupIdx].checks[ci]?'✓':''; } }
@@ -1258,6 +1259,10 @@ function toast(msg){ const el=document.getElementById('toast'); el.textContent=m
 if(location.search.includes('reset=1')){ localStorage.removeItem(K_GH); localStorage.removeItem(K_GM); history.replaceState(null,'',location.pathname); }
 
 if(!ghToken()){ openSetup(); } else { loadData(); }
+
+// 페이지 보일 때만 자동 새로고침 (3분마다)
+setInterval(()=>{ if(!document.hidden) loadData(); }, 180000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadData(); });
 </script>
 </body>
 </html>
