@@ -543,6 +543,18 @@
       "link": "https://mail.worksmobile.com/w/search?contentRange=0&periodRange=all&folderSN=-1&includeTrash=false&hasAttach=false&page=1&content=%EC%8B%AC%ED%8F%AC&t=1783302930631&mailSN=13296&isUnselected=false",
       "status": "open",
       "att": []
+    },
+    {
+      "id": "u1783642882712",
+      "name": "DAEWOONG Metabolic Care(DMC) Symposium — 그랜드 하얏트 서울",
+      "ds": "2026-08-29",
+      "de": "2026-08-30",
+      "product": "엔블로, 웰다, 바로에젯",
+      "pm": "한형석",
+      "to": "20명",
+      "link": "",
+      "status": "open",
+      "att": []
     }
   ],
   "hotels": [
@@ -629,6 +641,15 @@
     {
       "id": "h1783303117179",
       "name": "앰버서더 서울 풀만 19F 남산룸",
+      "keywords": [],
+      "mealImg": "",
+      "roomImg": "",
+      "phones": [],
+      "memo": ""
+    },
+    {
+      "id": "h1783642882712",
+      "name": "그랜드 하얏트 서울",
       "keywords": [],
       "mealImg": "",
       "roomImg": "",
