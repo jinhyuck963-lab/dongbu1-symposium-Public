@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>동부1 심포지엄</title>
+<title>심포지엄 관리</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#fff;--bg2:#f8f8f6;--bg3:#f2f1ee;--bg4:#eae9e5;
@@ -231,15 +232,69 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 
 /* ── 모바일 ── */
 @media(max-width:480px){
-  .dash-stats{grid-template-columns:repeat(3,1fr);gap:6px}
-  .dash-stat-num{font-size:20px}
-  .f2col{gap:8px}
+  .topbar{padding:0 12px;height:52px}
+  .topbar-logo{width:30px;height:30px;font-size:14px;border-radius:8px}
+  .topbar-title{font-size:14px}
+  .topbar-sub{font-size:10px}
+  .btn-add{padding:8px 14px;font-size:13px}
+
+  .dashboard{padding:12px}
+  .dash-title{font-size:10px;margin-bottom:10px}
+  .dash-stats{gap:6px;margin-bottom:12px}
+  .dash-stat{padding:10px 6px}
+  .dash-stat-num{font-size:22px}
+  .dash-stat-label{font-size:10px}
+  .member-chip{padding:5px 10px;gap:5px}
+  .member-avatar{width:22px;height:22px;font-size:10px}
+  .member-name{font-size:12px}
+  .member-count{font-size:12px}
+
+  .menu-bar{padding:8px 12px;gap:6px}
+  .menu-btn{padding:7px 11px;font-size:12px}
+
+  .view-tab{padding:10px 14px;font-size:12px}
+  .filter-scroll{padding:8px 12px}
+  .chip{padding:6px 11px;font-size:11px}
+
+  .month-header{padding:14px 12px 6px;font-size:10px}
+  .card-list{padding:0 10px;gap:7px}
+  .card-head{gap:10px;padding:12px 12px 8px}
+  .date-box{min-width:44px;padding:6px 8px;border-radius:8px}
+  .date-box .mo{font-size:9px}
+  .date-box .dy{font-size:19px}
+  .date-box .wd{font-size:9px}
+  .card-name{font-size:13px;margin-bottom:5px}
+  .tags{gap:3px}
+  .tag{font-size:10px;padding:2px 7px}
+  .card-actions{gap:3px}
+  .act-btn{padding:6px 8px;font-size:13px;border-radius:7px}
+
+  .att-section{padding:0 12px 10px}
+  .att-pills{gap:4px}
+  .att-pill{font-size:11px;padding:5px 8px 5px 7px;gap:4px}
+  .add-att-btn{font-size:11px;padding:5px 10px}
+
   .fab{bottom:20px;right:14px;width:50px;height:50px;font-size:24px}
   .chat-fab{bottom:20px;right:72px;width:50px;height:50px;font-size:22px}
+
+  .sheet{padding:18px 16px 32px}
+  .sheet-title{font-size:16px;margin-bottom:16px}
+  .finput{padding:10px 12px;font-size:14px}
+  .btn-save,.btn-cancel{padding:12px;font-size:13px}
+  .f2col{gap:8px}
+
+  .cal-wrap{padding:12px 10px 80px}
+  .cal-month-title{font-size:16px}
+  .cal-nav-btn{padding:7px 14px;font-size:16px}
+  .cal-day{min-height:56px;padding:4px}
+  .cal-date{font-size:10px}
+  .cal-event{font-size:9px;padding:1px 4px}
 }
 @media(max-width:360px){
   .f2col{grid-template-columns:1fr}
-  .dash-stats{grid-template-columns:repeat(3,1fr)}
+  .dash-stats{gap:4px}
+  .dash-stat-num{font-size:18px}
+  .card-name{font-size:12px}
 }
 </style>
 </head>
@@ -250,7 +305,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   <div class="topbar-left">
     <div class="topbar-logo">🏥</div>
     <div>
-      <div class="topbar-title">동부1 심포지엄</div>
+      <div class="topbar-title">심포지엄 관리</div>
       <div class="topbar-sub"><div class="live-dot"></div><span id="sync-label">불러오는 중...</span></div>
     </div>
   </div>
@@ -275,6 +330,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   <button class="menu-btn accent" onclick="openLog()">📋 변경 로그</button>
   <button class="menu-btn" onclick="openHotels()">🏨 호텔 DB</button>
   <button class="menu-btn" onclick="openMembers()">👥 인원 관리</button>
+  <button class="menu-btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
   <button class="menu-btn" onclick="loadData()">🔄 새로고침</button>
   <button class="menu-btn" onclick="openSetup()">⚙️ 설정</button>
 </div>
@@ -287,15 +343,12 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 
 <!-- 필터 -->
 <div class="filter-scroll" id="filter-row">
-  <div class="filter-inner">
+  <div class="filter-inner" id="filter-inner">
     <button class="chip on" onclick="setFilter('all',this)">전체</button>
     <button class="chip" onclick="setFilter('upcoming',this)">예정</button>
-    <button class="chip" onclick="setFilter('5',this)">5월</button>
-    <button class="chip" onclick="setFilter('6',this)">6월</button>
-    <button class="chip" onclick="setFilter('7p',this)">7월+</button>
+    <button class="chip" onclick="setFilter('done',this)">✅ 완료</button>
     <button class="chip" onclick="setFilter('open',this)">신청 가능</button>
     <button class="chip" onclick="setFilter('applied',this)">신청 완료</button>
-    <button class="chip" onclick="setFilter('done',this)">✅ 완료</button>
   </div>
 </div>
 
@@ -503,23 +556,16 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 <script>
 const GH_OWNER='jinhyuck963-lab', GH_REPO='dongbu1-symposium-Public';
 const GH_API=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/data.json`;
-const K_GH='dongbu1_gh', K_GM='dongbu1_gm', LOG_KEY='dongbu1_log', K_MEMBERS='dongbu1_members';
+const K_GH='dongbu1_gh', K_GM='dongbu1_gm', K_MEMBERS='dongbu1_members', K_NAME='dongbu1_name';
+const getMyName=()=>localStorage.getItem(K_NAME)||'알 수 없음';
 const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD=['일','월','화','수','목','금','토'];
 const ST={open:{l:'신청 가능',c:'green'},comp:{l:'경쟁 모객',c:'amber'},closed:{l:'마감',c:'red'},tbd:{l:'공지 예정',c:'teal'}};
-const DEFAULT_MEMBERS=['이상원','김은주','김은종','소민섭','허종환','최진혁','고준원'];
+const DEFAULT_MEMBERS=[];
 const getMembers=()=>JSON.parse(localStorage.getItem(K_MEMBERS)||'null')||DEFAULT_MEMBERS;
-const SEED=[
-  {id:'s1',name:'DEEP Symposium — 소피텔 앰배서더 서울',ds:'2026-05-19',de:'2026-05-19',product:'나보타, 브이올렛',pm:'이현진 PM',to:'나보타 브이올렛 매출처 O',link:'',status:'open',att:[{p:'이상원',c:'섬세이의원',d:'홍석우',st:'confirmed',checks:{}}]},
-  {id:'s2',name:'롯데호텔 소공동 — 피콕스위트',ds:'2026-05-16',de:'2026-05-17',product:'세비카F, 웰체크, 카트BP',pm:'김정욱 PM',to:'사업부 18명',link:'',status:'open',att:[{p:'김은종',c:'세실내과',d:'이치훈',st:'confirmed',checks:{}},{p:'이상원',c:'연세숲내과',d:'김채원',st:'confirmed',checks:{}},{p:'허종환',c:'바른마음내과',d:'김주경',st:'confirmed',checks:{}}]},
-  {id:'s3',name:'롯데호텔 소공동 — 가넷스위트',ds:'2026-05-16',de:'2026-05-17',product:'모비케어, 릭시아나',pm:'심연주 PM',to:'사업부 7명',link:'',status:'open',att:[{p:'김은주',c:'둔촌봄날이비인후과',d:'배승희',st:'confirmed',checks:{}}]},
-  {id:'s4',name:'DMD 심포지엄',ds:'2026-05-16',de:'2026-05-17',product:'펙수클루',pm:'이민호 PM',to:'30명',link:'',status:'open',att:[]},
-  {id:'s8',name:'풀만 서울 이스트폴',ds:'2026-06-20',de:'2026-06-21',product:'우루사, 실리스칸',pm:'김민수 PM',to:'1명',link:'',status:'open',att:[{p:'최진혁',c:'365플러스내과',d:'유정선',st:'confirmed',checks:{}}]},
-  {id:'s9',name:'힐리언스 심포지엄',ds:'2026-06-20',de:'2026-06-21',product:'크레젯, 리토바젯',pm:'윤인성 PM',to:'1-2명',link:'',status:'tbd',att:[]},
-  {id:'s10',name:'르메르디앙 서울 명동 — 메인홀',ds:'2026-06-27',de:'2026-06-28',product:'릭시아나',pm:'우찬하 PM',to:'1명',link:'',status:'open',att:[{p:'이상원',c:'365서울연합의원',d:'',st:'confirmed',checks:{}}]},
-];
+const SEED=[];
 
-let data=[], hotels=[], fileSha='', filter='all';
+let data=[], hotels=[], logs=[], fileSha='', filter='all';
 const ghToken=()=>localStorage.getItem(K_GH)||'';
 const gmKey=()=>localStorage.getItem(K_GM)||'';
 const getHotels=()=>hotels;
@@ -568,6 +614,7 @@ async function loadData(){
       } else {
         data=parsed.symps||[];
         hotels=parsed.hotels||[];
+        logs=parsed.logs||[];
       }
     } else throw new Error('HTTP '+r.status);
   }catch(e){ if(!data.length)data=[...SEED]; setSyncLabel('오프라인'); render(); return; }
@@ -576,7 +623,7 @@ async function loadData(){
 
 async function _push(){
   const tok=ghToken();
-  const body={message:'업데이트',content:b64enc(JSON.stringify({symps:data,hotels},null,2))};
+  const body={message:'업데이트',content:b64enc(JSON.stringify({symps:data,hotels,logs},null,2))};
   if(fileSha) body.sha=fileSha;
   const r=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.status===401||r.status===403){ localStorage.removeItem(K_GH); openSetup(); throw new Error('401'); }
@@ -616,28 +663,81 @@ function renderDashboard(){
 }
 
 // ── 렌더 ──
+function renderFilterChips(){
+  const now=new Date();
+  const curYear=now.getFullYear();
+  const curMonth=now.getMonth()+1;
+
+  // 데이터에서 예정된 월 목록 추출 (현재 월 이후)
+  const months=new Set();
+  data.forEach(s=>{
+    if(!isPast(s)){
+      const[y,m]=s.ds.split('-');
+      months.add(`${y}-${m}`);
+    }
+  });
+  const sortedMonths=[...months].sort();
+
+  const inner=document.getElementById('filter-inner');
+  inner.innerHTML=`
+    <button class="chip ${filter==='all'?'on':''}" onclick="setFilter('all',this)">전체</button>
+    <button class="chip ${filter==='upcoming'?'on':''}" onclick="setFilter('upcoming',this)">예정</button>
+    ${sortedMonths.map(ym=>{
+      const[y,m]=ym.split('-');
+      const label=`${parseInt(m)}월`;
+      return `<button class="chip ${filter===ym?'on':''}" onclick="setFilter('${ym}',this)">${label}</button>`;
+    }).join('')}
+    <button class="chip ${filter==='open'?'on':''}" onclick="setFilter('open',this)">신청 가능</button>
+    <button class="chip ${filter==='applied'?'on':''}" onclick="setFilter('applied',this)">신청 완료</button>
+    <button class="chip ${filter==='done'?'on':''}" onclick="setFilter('done',this)">✅ 완료</button>
+  `;
+}
+
 function render(){
   renderDashboard();
+  renderFilterChips();
   let items=[...data].sort((a,b)=>a.ds.localeCompare(b.ds));
+
   if(filter==='upcoming') items=items.filter(s=>!isPast(s));
   else if(filter==='done') items=items.filter(s=>isPast(s));
-  else if(filter==='5') items=items.filter(s=>s.ds.startsWith('2026-05'));
-  else if(filter==='6') items=items.filter(s=>s.ds.startsWith('2026-06'));
-  else if(filter==='7p') items=items.filter(s=>s.ds>='2026-07');
   else if(filter==='open') items=items.filter(s=>s.status!=='closed'&&!isPast(s));
   else if(filter==='applied') items=items.filter(s=>s.att&&s.att.length>0);
-  else items.sort((a,b)=>{ const ap=isPast(a),bp=isPast(b); if(ap!==bp)return ap?1:-1; return a.ds.localeCompare(b.ds); });
+  else if(filter.match(/^\d{4}-\d{2}$/)){
+    // 특정 월 필터
+    items=items.filter(s=>s.ds.startsWith(filter));
+  } else {
+    // 전체: 예정 먼저, 완료 나중
+    items.sort((a,b)=>{ const ap=isPast(a),bp=isPast(b); if(ap!==bp)return ap?1:-1; return a.ds.localeCompare(b.ds); });
+  }
 
   const el=document.getElementById('main-list');
   if(!items.length){ el.innerHTML='<div class="empty">📭 해당하는 심포지엄이 없습니다.</div>'; return; }
+
+  // 그룹핑: 지난 것들은 "완료"로 묶기
   const groups={};
-  items.forEach(s=>{ const k=isPast(s)?'done':s.ds.substring(0,7); if(!groups[k])groups[k]=[]; groups[k].push(s); });
-  const keys=Object.keys(groups).sort((a,b)=>{ if(a==='done')return 1; if(b==='done')return -1; return a.localeCompare(b); });
+  items.forEach(s=>{
+    const k=isPast(s)?'done':s.ds.substring(0,7);
+    if(!groups[k])groups[k]=[];
+    groups[k].push(s);
+  });
+
+  const keys=Object.keys(groups).sort((a,b)=>{
+    if(a==='done') return 1;
+    if(b==='done') return -1;
+    return a.localeCompare(b);
+  });
+
   let html='';
   for(const k of keys){
-    if(k==='done'){ html+=`<div class="month-header">✅ 완료된 심포지엄</div>`; }
-    else{ const[y,m]=k.split('-'); html+=`<div class="month-header">${y}년 ${parseInt(m)}월</div>`; }
-    html+=`<div class="card-list">`; groups[k].forEach(s=>{ html+=card(s); }); html+=`</div>`;
+    if(k==='done'){
+      html+=`<div class="month-header">✅ 완료된 심포지엄</div>`;
+    } else {
+      const[y,m]=k.split('-');
+      html+=`<div class="month-header">${y}년 ${parseInt(m)}월</div>`;
+    }
+    html+=`<div class="card-list">`;
+    groups[k].forEach(s=>{ html+=card(s); });
+    html+=`</div>`;
   }
   el.innerHTML=html;
 }
@@ -734,13 +834,32 @@ async function parseMail(){
 function setParseMsg(m,e){ const el=document.getElementById('parse-msg'); el.textContent=m; el.style.color=e?'var(--red-mid)':'var(--teal-mid)'; }
 
 // ── 로그 ──
-function addLog(action,name,date){ const logs=JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); logs.unshift({action,name,date:date||'',time:new Date().toISOString()}); if(logs.length>50)logs.pop(); localStorage.setItem(LOG_KEY,JSON.stringify(logs)); }
+function addLog(action,name,date){
+  const twoWeeksAgo=new Date(); twoWeeksAgo.setDate(twoWeeksAgo.getDate()-14);
+  logs=logs.filter(l=>new Date(l.time)>twoWeeksAgo);
+  logs.unshift({action,name,date:date||'',time:new Date().toISOString()});
+  if(logs.length>200) logs=logs.slice(0,200);
+}
 function openLog(){
-  const logs=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');
+  const twoWeeksAgo=new Date(); twoWeeksAgo.setDate(twoWeeksAgo.getDate()-14);
+  const recent=logs.filter(l=>new Date(l.time)>twoWeeksAgo);
   const icons={등록:'🆕',삭제:'🗑',수정:'✏️',인원추가:'👤',인원삭제:'➖'};
-  document.getElementById('log-list').innerHTML=logs.length
-    ?logs.map(l=>{ const d=new Date(l.time); const t=`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; const dateLabel=l.date?`<span style="background:var(--accent-bg);color:var(--accent);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;margin-top:3px;display:inline-block">${l.date}</span>`:''; return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><span style="font-size:20px;flex-shrink:0">${icons[l.action]||'📝'}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">${l.action}</div><div style="font-size:12px;color:var(--text2);margin-top:2px;word-break:break-all;line-height:1.5">${l.name}</div>${dateLabel}</div><div style="font-size:11px;color:var(--text3);flex-shrink:0">${t}</div></div>`; }).join('')
-    :'<div style="text-align:center;color:var(--text3);font-size:14px;padding:32px">아직 변경 내역이 없습니다.</div>';
+  document.getElementById('log-list').innerHTML=recent.length
+    ?recent.map(l=>{
+      const d=new Date(l.time);
+      const t=`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const dateLabel=l.date?`<span style="background:var(--accent-bg);color:var(--accent);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;margin-top:3px;display:inline-block">${l.date}</span>`:'';
+      return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;flex-shrink:0">${icons[l.action]||'📝'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${l.action}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;word-break:break-all;line-height:1.5">${l.name}</div>
+          <div style="margin-top:4px">${dateLabel}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);flex-shrink:0;margin-top:2px">${t}</div>
+      </div>`;
+    }).join('')
+    :'<div style="text-align:center;color:var(--text3);font-size:14px;padding:32px">최근 2주간 변경 내역이 없습니다.</div>';
   document.getElementById('ov-log').classList.add('open');
 }
 
@@ -949,7 +1068,124 @@ async function _aiMatchHotel(sympName){
   }catch(e){ /* 조용히 실패 */ }
 }
 
-// ── 채팅 ──
+// ── 엑셀 다운로드 ──
+function downloadExcel(){
+  const WD2=['일','월','화','수','목','금','토'];
+  const ST2={open:'신청 가능',comp:'경쟁 모객',closed:'마감',tbd:'공지 예정'};
+  const today=new Date(); today.setHours(0,0,0,0);
+  const dateStr=`${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+
+  const wb=XLSX.utils.book_new();
+
+  // ── 헬퍼 ──
+  const PURPLE='5B4FE8', PURPLE_L='F0EEFF';
+  const GREEN_C='1a7a3a', GREEN_L='e8f5ec';
+  const AMBER_C='7a4800', AMBER_L='fff3e0';
+  const RED_C='8a1a1a', RED_L='ffeaea';
+  const TEAL_C='0a6656', TEAL_L='e0f5f0';
+  const GRAY_H='2c2c2c', GRAY_L='f4f4f4', WHITE='FFFFFF';
+
+  function hdrStyle(bg=GRAY_H){ return {font:{bold:true,sz:10,color:{rgb:WHITE},name:'Arial'},fill:{fgColor:{rgb:bg}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'CCCCCC'}},bottom:{style:'thin',color:{rgb:'CCCCCC'}},left:{style:'thin',color:{rgb:'CCCCCC'}},right:{style:'thin',color:{rgb:'CCCCCC'}}}}; }
+  function cellStyle(fc='000000',bg=WHITE,bold=false){ return {font:{sz:10,color:{rgb:fc},name:'Arial',bold},fill:{fgColor:{rgb:bg}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'EEEEEE'}},bottom:{style:'thin',color:{rgb:'EEEEEE'}},left:{style:'thin',color:{rgb:'EEEEEE'}},right:{style:'thin',color:{rgb:'EEEEEE'}}}}; }
+  function leftStyle(fc='1a1a1a',bg=WHITE){ return {...cellStyle(fc,bg),alignment:{horizontal:'left',vertical:'center',wrapText:true}}; }
+
+  // ══ 시트1: 심포지엄 목록 ══
+  const sorted=[...data].sort((a,b)=>a.ds.localeCompare(b.ds));
+  const ws1Data=[];
+  const h1=['날짜','심포지엄명','장소','품목','PM','TO','상태','신청\n인원','확정','예약','진행'];
+  ws1Data.push(h1.map(v=>({v,s:hdrStyle()})));
+
+  sorted.forEach((s,ri)=>{
+    const ds=new Date(s.ds+'T00:00:00'), de=new Date(s.de+'T00:00:00');
+    const same=s.ds===s.de;
+    const dStr=same?`${ds.getMonth()+1}/${ds.getDate()}(${WD2[ds.getDay()]})`:`${ds.getMonth()+1}/${ds.getDate()}~${de.getDate()}`;
+    const parts=s.name.split('—');
+    const att=s.att||[];
+    const confirmed=att.filter(a=>a.st!=='reserved').length;
+    const reserved=att.filter(a=>a.st==='reserved').length;
+    const past=de<today;
+    const st=ST2[s.status]||s.status;
+    const bg=ri%2===0?GRAY_L:WHITE;
+
+    const stColor={
+      '신청 가능':[GREEN_C,GREEN_L],'경쟁 모객':[AMBER_C,AMBER_L],
+      '마감':[RED_C,RED_L],'공지 예정':[TEAL_C,TEAL_L]
+    }[st]||['333333',bg];
+
+    ws1Data.push([
+      {v:dStr,s:cellStyle('333333',bg)},
+      {v:parts[0]?.trim()||'',s:leftStyle('111111',bg)},
+      {v:parts[1]?.trim()||'',s:leftStyle('555555',bg)},
+      {v:s.product||'',s:leftStyle('111111',bg)},
+      {v:s.pm||'',s:cellStyle('333333',bg)},
+      {v:s.to||'',s:leftStyle('333333',bg)},
+      {v:st,s:cellStyle(stColor[0],stColor[1],true)},
+      {v:att.length,s:cellStyle('333333',bg,att.length>0)},
+      {v:confirmed,s:confirmed>0?cellStyle(GREEN_C,GREEN_L,true):cellStyle('999999',bg)},
+      {v:reserved,s:reserved>0?cellStyle(AMBER_C,AMBER_L,true):cellStyle('999999',bg)},
+      {v:past?'완료':'진행중',s:past?cellStyle('888888','f0f0f0'):cellStyle(PURPLE,PURPLE_L,true)},
+    ]);
+  });
+
+  const ws1=XLSX.utils.aoa_to_sheet(ws1Data.map(r=>r.map(c=>c.v)));
+  ws1Data.forEach((row,ri)=>row.forEach((cell,ci)=>{
+    const ref=XLSX.utils.encode_cell({r:ri,c:ci});
+    if(!ws1[ref]) ws1[ref]={v:cell.v};
+    ws1[ref].s=cell.s;
+  }));
+  ws1['!cols']=[{wch:14},{wch:28},{wch:20},{wch:22},{wch:13},{wch:22},{wch:12},{wch:8},{wch:8},{wch:8},{wch:10}];
+  ws1['!rows']=[{hpt:22},...sorted.map(()=>({hpt:20}))];
+  ws1['!freeze']={xSplit:0,ySplit:1};
+  XLSX.utils.book_append_sheet(wb,ws1,'심포지엄 목록');
+
+  // ══ 시트2: 신청 인원 상세 ══
+  const ws2Data=[];
+  const h2=['날짜','심포지엄명','담당자','거래처','원장명','상태','CRM\n등록','인원\n확인','요청\n내용','식당\n예약','체크\n완료'];
+  ws2Data.push(h2.map(v=>({v,s:hdrStyle(PURPLE)})));
+
+  let ri2=0;
+  sorted.forEach(s=>{
+    const att=s.att||[];
+    if(!att.length) return;
+    const ds=new Date(s.ds+'T00:00:00');
+    const dStr=`${ds.getMonth()+1}/${ds.getDate()}(${WD2[ds.getDay()]})`;
+    const sympName=s.name.split('—')[0].trim();
+    att.forEach(a=>{
+      const c=a.checks||{};
+      const chk=[!!c[0],!!c[1],!!c[2],!!c[3]];
+      const done=chk.filter(Boolean).length;
+      const isR=a.st==='reserved';
+      const bg=ri2%2===0?GRAY_L:WHITE;
+      ri2++;
+      ws2Data.push([
+        {v:dStr,s:cellStyle('333333',bg)},
+        {v:sympName,s:leftStyle('111111',bg)},
+        {v:a.p,s:cellStyle('333333',bg,true)},
+        {v:a.c,s:leftStyle('111111',bg)},
+        {v:a.d||'',s:leftStyle('555555',bg)},
+        {v:isR?'예약':'확정',s:isR?cellStyle(AMBER_C,AMBER_L,true):cellStyle(GREEN_C,GREEN_L,true)},
+        ...chk.map(v=>({v:v?'✓':'',s:v?cellStyle(GREEN_C,GREEN_L,true):cellStyle('cccccc',bg)})),
+        {v:`${done}/4`,s:done===4?cellStyle(PURPLE,PURPLE_L,true):cellStyle('555555',bg)},
+      ]);
+    });
+  });
+
+  const ws2=XLSX.utils.aoa_to_sheet(ws2Data.map(r=>r.map(c=>c.v)));
+  ws2Data.forEach((row,ri)=>row.forEach((cell,ci)=>{
+    const ref=XLSX.utils.encode_cell({r:ri,c:ci});
+    if(!ws2[ref]) ws2[ref]={v:cell.v};
+    ws2[ref].s=cell.s;
+  }));
+  ws2['!cols']=[{wch:13},{wch:26},{wch:11},{wch:18},{wch:13},{wch:9},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+  ws2['!rows']=[{hpt:22},...Array(ri2).fill({hpt:20})];
+  ws2['!freeze']={xSplit:0,ySplit:1};
+  XLSX.utils.book_append_sheet(wb,ws2,'신청 인원 상세');
+
+  XLSX.writeFile(wb,`심포지엄_현황_${dateStr}.xlsx`,{bookType:'xlsx',cellStyles:true});
+  toast('📥 엑셀 다운로드됐습니다');
+}
+
+
 function openChat(){ document.getElementById('chat-screen').classList.add('show'); }
 function closeChat(){ document.getElementById('chat-screen').classList.remove('show'); }
 function quickAsk(q){ document.getElementById('chat-input').value=q; sendChat(); }
@@ -979,6 +1215,19 @@ function timeStr(){ const n=new Date(); return n.getHours()+':'+String(n.getMinu
 function setBtn(id,disabled,label){ const b=document.getElementById(id); if(!b)return; b.disabled=disabled; if(label) b.innerHTML=disabled?`<span class="spinner"></span>${label}`:label; }
 let _tt;
 function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2500); }
+
+// URL 파라미터로 키 자동 저장
+(()=>{
+  const p=new URLSearchParams(location.search);
+  const gh=p.get('gh'), gm=p.get('gm');
+  if(gh) localStorage.setItem(K_GH,gh);
+  if(gm) localStorage.setItem(K_GM,gm);
+  if(gh||gm){
+    // 파라미터 제거 (보안)
+    history.replaceState(null,'',location.pathname);
+    toast('✅ 설정이 자동으로 저장됐습니다');
+  }
+})();
 
 // ?reset=1
 if(location.search.includes('reset=1')){ localStorage.removeItem(K_GH); localStorage.removeItem(K_GM); localStorage.removeItem(K_MEMBERS); history.replaceState(null,'',location.pathname); }
