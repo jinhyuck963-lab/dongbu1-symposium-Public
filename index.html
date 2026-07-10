@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>심포지엄 관리</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <style>
 :root{
   --bg:#fff;--bg2:#f8f8f6;--bg3:#f2f1ee;--bg4:#eae9e5;
@@ -556,18 +556,18 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 <script>
 const GH_OWNER='jinhyuck963-lab', GH_REPO='dongbu1-symposium-Public';
 const GH_API=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/data.json`;
-const K_GH='dongbu1_gh', K_GM='dongbu1_gm', K_MEMBERS='dongbu1_members', K_NAME='dongbu1_name';
+const K_GH='dongbu1_gh', K_GM='dongbu1_gm', K_NAME='dongbu1_name';
 const getMyName=()=>localStorage.getItem(K_NAME)||'알 수 없음';
 const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WD=['일','월','화','수','목','금','토'];
 const ST={open:{l:'신청 가능',c:'green'},comp:{l:'경쟁 모객',c:'amber'},closed:{l:'마감',c:'red'},tbd:{l:'공지 예정',c:'teal'}};
 const DEFAULT_MEMBERS=[];
-const getMembers=()=>JSON.parse(localStorage.getItem(K_MEMBERS)||'null')||DEFAULT_MEMBERS;
 const SEED=[];
 
-let data=[], hotels=[], logs=[], fileSha='', filter='all';
+let data=[], hotels=[], logs=[], members=[], fileSha='', filter='all';
 const ghToken=()=>localStorage.getItem(K_GH)||'';
 const gmKey=()=>localStorage.getItem(K_GM)||'';
+const getMembers=()=>members;
 const getHotels=()=>hotels;
 
 // ── 설정 ──
@@ -615,6 +615,7 @@ async function loadData(){
         data=parsed.symps||[];
         hotels=parsed.hotels||[];
         logs=parsed.logs||[];
+        members=parsed.members||[];
       }
     } else throw new Error('HTTP '+r.status);
   }catch(e){ if(!data.length)data=[...SEED]; setSyncLabel('오프라인'); render(); return; }
@@ -623,7 +624,7 @@ async function loadData(){
 
 async function _push(){
   const tok=ghToken();
-  const body={message:'업데이트',content:b64enc(JSON.stringify({symps:data,hotels,logs},null,2))};
+  const body={message:'업데이트',content:b64enc(JSON.stringify({symps:data,hotels,logs,members},null,2))};
   if(fileSha) body.sha=fileSha;
   const r=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.status===401||r.status===403){ localStorage.removeItem(K_GH); openSetup(); throw new Error('401'); }
@@ -993,9 +994,9 @@ function openEdit(sid){ const s=data.find(x=>x.id===sid); if(!s) return; documen
 
 // ── 사무소 인원 ──
 function openMembers(){ renderMembersList(); document.getElementById('new-member-input').value=''; document.getElementById('ov-members').classList.add('open'); }
-function renderMembersList(){ const members=getMembers(); document.getElementById('members-list').innerHTML=members.map((m,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;border:1px solid var(--border)"><span style="font-size:14px;font-weight:600">${m}</span><button onclick="deleteMember(${i})" style="background:var(--red-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--red-mid);font-size:12px;font-weight:600">삭제</button></div>`).join(''); const sel=document.getElementById('fp-person'); if(sel) sel.innerHTML=members.map(m=>`<option>${m}</option>`).join(''); }
-function addMember(){ const input=document.getElementById('new-member-input'); const name=input.value.trim(); if(!name){ toast('이름을 입력해주세요'); return; } const members=getMembers(); if(members.includes(name)){ toast('이미 있는 이름입니다'); return; } members.push(name); localStorage.setItem(K_MEMBERS,JSON.stringify(members)); input.value=''; renderMembersList(); toast(`${name} 추가됐습니다`); }
-function deleteMember(idx){ const members=getMembers(); if(members.length<=1){ toast('최소 1명은 있어야 합니다'); return; } if(!confirm(`${members[idx]}을(를) 삭제할까요?`)) return; members.splice(idx,1); localStorage.setItem(K_MEMBERS,JSON.stringify(members)); renderMembersList(); toast('삭제됐습니다'); }
+function renderMembersList(){ document.getElementById('members-list').innerHTML=members.map((m,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;border:1px solid var(--border)"><span style="font-size:14px;font-weight:600">${m}</span><button onclick="deleteMember(${i})" style="background:var(--red-bg);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--red-mid);font-size:12px;font-weight:600">삭제</button></div>`).join(''); const sel=document.getElementById('fp-person'); if(sel) sel.innerHTML=members.map(m=>`<option>${m}</option>`).join(''); }
+async function addMember(){ const input=document.getElementById('new-member-input'); const name=input.value.trim(); if(!name){ toast('이름을 입력해주세요'); return; } if(members.includes(name)){ toast('이미 있는 이름입니다'); return; } members.push(name); input.value=''; await saveData(); renderMembersList(); toast(`${name} 추가됐습니다`); }
+async function deleteMember(idx){ if(members.length<=1){ toast('최소 1명은 있어야 합니다'); return; } if(!confirm(`${members[idx]}을(를) 삭제할까요?`)) return; members.splice(idx,1); await saveData(); renderMembersList(); toast('삭제됐습니다'); }
 
 // ── 달력 ──
 let currentView='list', calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
@@ -1069,31 +1070,54 @@ async function _aiMatchHotel(sympName){
 }
 
 // ── 엑셀 다운로드 ──
-function downloadExcel(){
+async function downloadExcel(){
+  toast('📊 엑셀 생성 중...');
   const WD2=['일','월','화','수','목','금','토'];
   const ST2={open:'신청 가능',comp:'경쟁 모객',closed:'마감',tbd:'공지 예정'};
   const today=new Date(); today.setHours(0,0,0,0);
   const dateStr=`${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+  const sorted=[...data].sort((a,b)=>a.ds.localeCompare(b.ds));
 
-  const wb=XLSX.utils.book_new();
+  const wb=new ExcelJS.Workbook();
+  wb.creator='심포지엄 관리'; wb.created=new Date();
 
-  // ── 헬퍼 ──
-  const PURPLE='5B4FE8', PURPLE_L='F0EEFF';
-  const GREEN_C='1a7a3a', GREEN_L='e8f5ec';
-  const AMBER_C='7a4800', AMBER_L='fff3e0';
-  const RED_C='8a1a1a', RED_L='ffeaea';
-  const TEAL_C='0a6656', TEAL_L='e0f5f0';
-  const GRAY_H='2c2c2c', GRAY_L='f4f4f4', WHITE='FFFFFF';
+  // ── 색상 ──
+  const C={
+    PURPLE:'5B4FE8', PURPLE_L:'F0EEFF',
+    GREEN:'1a7a3a', GREEN_L:'e8f5ec',
+    AMBER:'7a4800', AMBER_L:'fff3e0',
+    RED:'8a1a1a', RED_L:'ffeaea',
+    TEAL:'0a6656', TEAL_L:'e0f5f0',
+    HDR:'2c2c2c', GRAY:'f4f4f2', WHITE:'FFFFFF',
+  };
 
-  function hdrStyle(bg=GRAY_H){ return {font:{bold:true,sz:10,color:{rgb:WHITE},name:'Arial'},fill:{fgColor:{rgb:bg}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'CCCCCC'}},bottom:{style:'thin',color:{rgb:'CCCCCC'}},left:{style:'thin',color:{rgb:'CCCCCC'}},right:{style:'thin',color:{rgb:'CCCCCC'}}}}; }
-  function cellStyle(fc='000000',bg=WHITE,bold=false){ return {font:{sz:10,color:{rgb:fc},name:'Arial',bold},fill:{fgColor:{rgb:bg}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'EEEEEE'}},bottom:{style:'thin',color:{rgb:'EEEEEE'}},left:{style:'thin',color:{rgb:'EEEEEE'}},right:{style:'thin',color:{rgb:'EEEEEE'}}}}; }
-  function leftStyle(fc='1a1a1a',bg=WHITE){ return {...cellStyle(fc,bg),alignment:{horizontal:'left',vertical:'center',wrapText:true}}; }
+  function applyCell(cell, val, opts={}){
+    cell.value=val;
+    cell.font={name:'Arial',size:10,bold:!!opts.bold,color:{argb:'FF'+(opts.fc||'1a1a1a')}};
+    if(opts.bg) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF'+opts.bg}};
+    cell.alignment={horizontal:opts.h||'center',vertical:'middle',wrapText:true};
+    cell.border={
+      top:{style:'thin',color:{argb:'FFDDDDDD'}},
+      bottom:{style:'thin',color:{argb:'FFDDDDDD'}},
+      left:{style:'thin',color:{argb:'FFDDDDDD'}},
+      right:{style:'thin',color:{argb:'FFDDDDDD'}},
+    };
+  }
+  function hdrCell(cell, val, bg=C.HDR){
+    applyCell(cell,val,{bold:true,fc:C.WHITE,bg,h:'center'});
+  }
 
   // ══ 시트1: 심포지엄 목록 ══
-  const sorted=[...data].sort((a,b)=>a.ds.localeCompare(b.ds));
-  const ws1Data=[];
-  const h1=['날짜','심포지엄명','장소','품목','PM','TO','상태','신청\n인원','확정','예약','진행'];
-  ws1Data.push(h1.map(v=>({v,s:hdrStyle()})));
+  const ws1=wb.addWorksheet('심포지엄 목록',{views:[{state:'frozen',ySplit:1}]});
+  ws1.columns=[
+    {width:14},{width:30},{width:22},{width:24},{width:13},{width:24},
+    {width:12},{width:9},{width:9},{width:9},{width:11}
+  ];
+
+  const h1=['날짜','심포지엄명','장소','품목','PM','TO','상태','신청인원','확정','예약','진행'];
+  const hdr1=ws1.addRow(h1);
+  hdr1.height=24;
+  hdr1.eachCell(c=>hdrCell(c,c.value));
 
   sorted.forEach((s,ri)=>{
     const ds=new Date(s.ds+'T00:00:00'), de=new Date(s.de+'T00:00:00');
@@ -1105,48 +1129,41 @@ function downloadExcel(){
     const reserved=att.filter(a=>a.st==='reserved').length;
     const past=de<today;
     const st=ST2[s.status]||s.status;
-    const bg=ri%2===0?GRAY_L:WHITE;
+    const bg=ri%2===0?C.GRAY:C.WHITE;
 
-    const stColor={
-      '신청 가능':[GREEN_C,GREEN_L],'경쟁 모객':[AMBER_C,AMBER_L],
-      '마감':[RED_C,RED_L],'공지 예정':[TEAL_C,TEAL_L]
-    }[st]||['333333',bg];
+    const stMap={'신청 가능':[C.GREEN,C.GREEN_L],'경쟁 모객':[C.AMBER,C.AMBER_L],'마감':[C.RED,C.RED_L],'공지 예정':[C.TEAL,C.TEAL_L]};
+    const [sfc,sbg]=stMap[st]||['333333',bg];
 
-    ws1Data.push([
-      {v:dStr,s:cellStyle('333333',bg)},
-      {v:parts[0]?.trim()||'',s:leftStyle('111111',bg)},
-      {v:parts[1]?.trim()||'',s:leftStyle('555555',bg)},
-      {v:s.product||'',s:leftStyle('111111',bg)},
-      {v:s.pm||'',s:cellStyle('333333',bg)},
-      {v:s.to||'',s:leftStyle('333333',bg)},
-      {v:st,s:cellStyle(stColor[0],stColor[1],true)},
-      {v:att.length,s:cellStyle('333333',bg,att.length>0)},
-      {v:confirmed,s:confirmed>0?cellStyle(GREEN_C,GREEN_L,true):cellStyle('999999',bg)},
-      {v:reserved,s:reserved>0?cellStyle(AMBER_C,AMBER_L,true):cellStyle('999999',bg)},
-      {v:past?'완료':'진행중',s:past?cellStyle('888888','f0f0f0'):cellStyle(PURPLE,PURPLE_L,true)},
-    ]);
+    const row=ws1.addRow([]);
+    row.height=20;
+    applyCell(row.getCell(1),dStr,{fc:'444444',bg});
+    applyCell(row.getCell(2),parts[0]?.trim()||'',{fc:'111111',bg,h:'left'});
+    applyCell(row.getCell(3),parts[1]?.trim()||'',{fc:'666666',bg,h:'left'});
+    applyCell(row.getCell(4),s.product||'',{fc:'111111',bg,h:'left'});
+    applyCell(row.getCell(5),s.pm||'',{fc:'444444',bg});
+    applyCell(row.getCell(6),s.to||'',{fc:'444444',bg,h:'left'});
+    applyCell(row.getCell(7),st,{bold:true,fc:sfc,bg:sbg});
+    applyCell(row.getCell(8),att.length,{bold:att.length>0,fc:att.length>0?'111111':'999999',bg});
+    applyCell(row.getCell(9),confirmed,{bold:confirmed>0,fc:confirmed>0?C.GREEN:'999999',bg:confirmed>0?C.GREEN_L:bg});
+    applyCell(row.getCell(10),reserved,{bold:reserved>0,fc:reserved>0?C.AMBER:'999999',bg:reserved>0?C.AMBER_L:bg});
+    applyCell(row.getCell(11),past?'완료':'진행중',{bold:true,fc:past?'888888':C.PURPLE,bg:past?'f0f0f0':C.PURPLE_L});
   });
 
-  const ws1=XLSX.utils.aoa_to_sheet(ws1Data.map(r=>r.map(c=>c.v)));
-  ws1Data.forEach((row,ri)=>row.forEach((cell,ci)=>{
-    const ref=XLSX.utils.encode_cell({r:ri,c:ci});
-    if(!ws1[ref]) ws1[ref]={v:cell.v};
-    ws1[ref].s=cell.s;
-  }));
-  ws1['!cols']=[{wch:14},{wch:28},{wch:20},{wch:22},{wch:13},{wch:22},{wch:12},{wch:8},{wch:8},{wch:8},{wch:10}];
-  ws1['!rows']=[{hpt:22},...sorted.map(()=>({hpt:20}))];
-  ws1['!freeze']={xSplit:0,ySplit:1};
-  XLSX.utils.book_append_sheet(wb,ws1,'심포지엄 목록');
-
   // ══ 시트2: 신청 인원 상세 ══
-  const ws2Data=[];
-  const h2=['날짜','심포지엄명','담당자','거래처','원장명','상태','CRM\n등록','인원\n확인','요청\n내용','식당\n예약','체크\n완료'];
-  ws2Data.push(h2.map(v=>({v,s:hdrStyle(PURPLE)})));
+  const ws2=wb.addWorksheet('신청 인원 상세',{views:[{state:'frozen',ySplit:1}]});
+  ws2.columns=[
+    {width:13},{width:28},{width:12},{width:20},{width:14},
+    {width:9},{width:9},{width:9},{width:9},{width:9},{width:9}
+  ];
+
+  const h2=['날짜','심포지엄명','담당자','거래처','원장명','상태','CRM등록','인원확인','요청내용','식당예약','체크완료'];
+  const hdr2=ws2.addRow(h2);
+  hdr2.height=24;
+  hdr2.eachCell(c=>hdrCell(c,c.value,C.PURPLE));
 
   let ri2=0;
   sorted.forEach(s=>{
-    const att=s.att||[];
-    if(!att.length) return;
+    const att=s.att||[]; if(!att.length) return;
     const ds=new Date(s.ds+'T00:00:00');
     const dStr=`${ds.getMonth()+1}/${ds.getDate()}(${WD2[ds.getDay()]})`;
     const sympName=s.name.split('—')[0].trim();
@@ -1155,33 +1172,27 @@ function downloadExcel(){
       const chk=[!!c[0],!!c[1],!!c[2],!!c[3]];
       const done=chk.filter(Boolean).length;
       const isR=a.st==='reserved';
-      const bg=ri2%2===0?GRAY_L:WHITE;
-      ri2++;
-      ws2Data.push([
-        {v:dStr,s:cellStyle('333333',bg)},
-        {v:sympName,s:leftStyle('111111',bg)},
-        {v:a.p,s:cellStyle('333333',bg,true)},
-        {v:a.c,s:leftStyle('111111',bg)},
-        {v:a.d||'',s:leftStyle('555555',bg)},
-        {v:isR?'예약':'확정',s:isR?cellStyle(AMBER_C,AMBER_L,true):cellStyle(GREEN_C,GREEN_L,true)},
-        ...chk.map(v=>({v:v?'✓':'',s:v?cellStyle(GREEN_C,GREEN_L,true):cellStyle('cccccc',bg)})),
-        {v:`${done}/4`,s:done===4?cellStyle(PURPLE,PURPLE_L,true):cellStyle('555555',bg)},
-      ]);
+      const bg=ri2%2===0?C.GRAY:C.WHITE; ri2++;
+      const row=ws2.addRow([]); row.height=20;
+      applyCell(row.getCell(1),dStr,{fc:'444444',bg});
+      applyCell(row.getCell(2),sympName,{fc:'111111',bg,h:'left'});
+      applyCell(row.getCell(3),a.p,{bold:true,fc:'333333',bg});
+      applyCell(row.getCell(4),a.c,{fc:'111111',bg,h:'left'});
+      applyCell(row.getCell(5),a.d||'',{fc:'666666',bg,h:'left'});
+      applyCell(row.getCell(6),isR?'예약':'확정',{bold:true,fc:isR?C.AMBER:C.GREEN,bg:isR?C.AMBER_L:C.GREEN_L});
+      chk.forEach((v,i)=>applyCell(row.getCell(7+i),v?'✓':'',{bold:v,fc:v?C.GREEN:'cccccc',bg:v?C.GREEN_L:bg}));
+      applyCell(row.getCell(11),`${done}/4`,{bold:done===4,fc:done===4?C.PURPLE:'666666',bg:done===4?C.PURPLE_L:bg});
     });
   });
 
-  const ws2=XLSX.utils.aoa_to_sheet(ws2Data.map(r=>r.map(c=>c.v)));
-  ws2Data.forEach((row,ri)=>row.forEach((cell,ci)=>{
-    const ref=XLSX.utils.encode_cell({r:ri,c:ci});
-    if(!ws2[ref]) ws2[ref]={v:cell.v};
-    ws2[ref].s=cell.s;
-  }));
-  ws2['!cols']=[{wch:13},{wch:26},{wch:11},{wch:18},{wch:13},{wch:9},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
-  ws2['!rows']=[{hpt:22},...Array(ri2).fill({hpt:20})];
-  ws2['!freeze']={xSplit:0,ySplit:1};
-  XLSX.utils.book_append_sheet(wb,ws2,'신청 인원 상세');
-
-  XLSX.writeFile(wb,`심포지엄_현황_${dateStr}.xlsx`,{bookType:'xlsx',cellStyles:true});
+  // 다운로드
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`심포지엄_현황_${dateStr}.xlsx`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('📥 엑셀 다운로드됐습니다');
 }
 
@@ -1230,7 +1241,7 @@ function toast(msg){ const el=document.getElementById('toast'); el.textContent=m
 })();
 
 // ?reset=1
-if(location.search.includes('reset=1')){ localStorage.removeItem(K_GH); localStorage.removeItem(K_GM); localStorage.removeItem(K_MEMBERS); history.replaceState(null,'',location.pathname); }
+if(location.search.includes('reset=1')){ localStorage.removeItem(K_GH); localStorage.removeItem(K_GM); history.replaceState(null,'',location.pathname); }
 
 if(!ghToken()){ openSetup(); } else { loadData(); }
 setInterval(loadData,60000);
