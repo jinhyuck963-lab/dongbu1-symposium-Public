@@ -626,15 +626,29 @@ async function _push(){
   const tok=ghToken();
   const body={message:'업데이트',content:b64enc(JSON.stringify({symps:data,hotels,logs,members},null,2))};
   if(fileSha) body.sha=fileSha;
-  const r=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  let r=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.status===409){
+    // SHA 충돌 → 최신 SHA 가져와서 재시도
+    const r2=await fetch(GH_API,{headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json'}});
+    if(r2.ok){ const j2=await r2.json(); fileSha=j2.sha; body.sha=fileSha; }
+    r=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${tok}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  }
   if(r.status===401||r.status===403){ localStorage.removeItem(K_GH); openSetup(); throw new Error('401'); }
   if(!r.ok) throw new Error('저장실패');
   const j=await r.json(); fileSha=j.content.sha;
 }
 
+let _saving=false;
 async function saveData(){
-  try{ await _push(); setSyncLabel(timeStr()+' 저장됨'); toast('저장됐습니다 ✓'); }
-  catch(e){ if(e.message!=='401') toast('저장 실패'); }
+  if(_saving) return;
+  _saving=true;
+  try{
+    await _push();
+    setSyncLabel(timeStr()+' 저장됨');
+    toast('저장됐습니다 ✓');
+  }catch(e){
+    if(e.message!=='401') toast('저장 실패');
+  }finally{ _saving=false; }
 }
 
 function isPast(s){ const t=new Date(); t.setHours(0,0,0,0); return new Date(s.de+'T00:00:00')<t; }
@@ -1244,7 +1258,6 @@ function toast(msg){ const el=document.getElementById('toast'); el.textContent=m
 if(location.search.includes('reset=1')){ localStorage.removeItem(K_GH); localStorage.removeItem(K_GM); history.replaceState(null,'',location.pathname); }
 
 if(!ghToken()){ openSetup(); } else { loadData(); }
-setInterval(loadData,60000);
 </script>
 </body>
 </html>
